@@ -1,9 +1,10 @@
 import { User } from "../entities/User";
-import { Arg, Ctx, Field, Mutation,ObjectType,Query,Resolver} from "type-graphql";
+import { Arg, Authorized, Ctx, Field, Mutation,ObjectType,Query,Resolver} from "type-graphql";
 import { CreateUserInput,EditProfileInput,LoginInput, ResetPasswordInput } from "../inputs/User";
 import jwt from "jsonwebtoken";
-import { MyContext } from "src/utils/context";
+import { MyContext } from "../utils/context";
 import bcrypt from "bcryptjs";
+import { ADMINMAILLIST, UserRole } from "../utils/Userrole";
 
 
 @ObjectType("GetUsersOutput")
@@ -28,10 +29,10 @@ export class UserResolver {
         // const { name, email, id,verificationOTP} = user;
         // await User.sendVerificationMail({ name, email, id, verifyOTP });
 
-        // if(ADMINMAILLIST.includes(email)){
-            // const { affected } = await User.update(user?.id, { role: UserRole.ADMIN })
-            // return affected === 1;
-        // }
+        if(ADMINMAILLIST.includes(data.email)){
+            const { affected } = await User.update(user?.id, { role: UserRole.ADMIN })
+            return affected === 1;
+        }
         let token = jwt.sign({ id: user.id }, process.env.JWT_SECRET || "secret");
         res.cookie("token", token )
 
@@ -103,6 +104,7 @@ export class UserResolver {
         return user;
     }
 
+    @Authorized()
     @Query(() => User, { nullable: true })
     async me(@Ctx() { user }: MyContext) {
         return user;

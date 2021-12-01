@@ -1,7 +1,6 @@
 export enum UserRole {
     ADMIN = "ADMIN",
-    LEADER = "LEADER",
-    MEMBER = "MEMBER"
+    USER = "USER"
   }
 
-  export const ADMINMAILLIST = ["webops@shaastra.org","tif@shaastra.org"]
+  export const ADMINMAILLIST = ["webops@shaastra.org"]

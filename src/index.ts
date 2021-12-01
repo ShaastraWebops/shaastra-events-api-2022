@@ -9,6 +9,8 @@ import cors from "cors";
 import { createConnection } from "typeorm";
 import jwt from "jsonwebtoken";
 import { User } from "./entities/User";
+import {authChecker} from "./utils/auth";
+
 
 dotenv.config();
 const PORT = process.env.PORT || 8000 ;
@@ -27,7 +29,7 @@ const main = async () =>{
       })
       .catch((e) => console.log(e))
  
-  const schema = await buildSchema({ resolvers});
+  const schema = await buildSchema({ resolvers , authChecker});
 
   const server = new ApolloServer({
     schema,

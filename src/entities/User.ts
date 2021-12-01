@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import cuid from "cuid";
-import { UserRole } from "src/utils/Userrole";
+import { UserRole } from "../utils/Userrole";
 import { Field, ID, ObjectType, registerEnumType } from "type-graphql";
 import {
   BaseEntity,
@@ -95,6 +95,11 @@ export class User extends BaseEntity {
   @Field({ nullable: true })
   @Column({ nullable: true })
   passwordOTP: string;
+
+  @Column("enum", { enum: UserRole, default: UserRole.USER})
+  @Field(() => UserRole)
+  role: UserRole;
+
 
   // RELATIONS & FOREIGN KEYS
 
