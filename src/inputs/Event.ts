@@ -13,3 +13,17 @@ export class AddEventInput {
     description: string;
     
 }
+
+@InputType("EditEventInput")
+export class EditEventInput {
+
+    @Field()
+	name: string;
+
+    @Field()
+    vertical: string;
+  
+    @Field()
+    description: string;
+    
+}
