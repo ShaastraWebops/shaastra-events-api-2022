@@ -1,10 +1,11 @@
 import { User } from "../entities/User";
-import { Arg, Authorized, Ctx, Field, Mutation,ObjectType,Query,Resolver} from "type-graphql";
+import { Arg, Authorized, Ctx, Field, FieldResolver, Mutation,ObjectType,Query,Resolver, Root} from "type-graphql";
 import { CreateUserInput,EditProfileInput,LoginInput, ResetPasswordInput } from "../inputs/User";
 import jwt from "jsonwebtoken";
 import { MyContext } from "../utils/context";
 import bcrypt from "bcryptjs";
-import { ADMINMAILLIST, UserRole } from "../utils/Userrole";
+import { ADMINMAILLIST, UserRole } from "../utils";
+import { Event } from "../entities/Event";
 
 
 @ObjectType("GetUsersOutput")
@@ -142,5 +143,19 @@ export class UserResolver {
     async getUsersCount() {
         return await User.count({ where: { isVerified: true } });
     }
+
+    @Authorized()
+    @FieldResolver(() => [Event])
+    async registeredEvents(@Root() { id }: User ) {
+        let { registeredEvents} = await User.findOneOrFail( id, { relations: ["registeredEvents"] } );
+
+        // await Promise.all(teams?.map(async (team) => {
+        //     const teaM = await Team.findOneOrFail(team.id, { relations: ["event"] });
+        //     registeredEvents.push(teaM.event);
+        // }));
+
+        return registeredEvents;
+    }
+
 
 }

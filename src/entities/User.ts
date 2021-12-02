@@ -1,20 +1,41 @@
 import bcrypt from "bcryptjs";
 import cuid from "cuid";
-import { UserRole } from "../utils/Userrole";
+import { SendVerificationMailOptions, UserRole } from "../utils";
 import { Field, ID, ObjectType, registerEnumType } from "type-graphql";
 import {
   BaseEntity,
   BeforeInsert,
   Column,
   Entity,
+  ManyToMany,
+  OneToMany,
   PrimaryColumn,
 } from "typeorm";
+import { Team } from "./Team";
+import { Event } from "./Event";
+import { mail } from "../utils/mail";
 
 registerEnumType( UserRole, { name: "UserRole" } );
 
 @Entity("User")
 @ObjectType("User")
 export class User extends BaseEntity {
+
+   
+  static async sendVerificationMail({ name, email , verificationOTP}: SendVerificationMailOptions) {
+    console.log("name",name,email)
+    const  body= `Hello <b>${name}</b>,<br><br>
+    Thanks for signing up!<br><br><p>You verification code is <strong>${verificationOTP}</strong></p>`;
+    await mail({ email, sub: "Complete your Verification | Shaastra- 2022", body });
+}
+
+static async sendForgotResetMail({ name, email , verificationOTP}: SendVerificationMailOptions) {
+  const  body= `Hello <b>${name}</b>,<br><br>
+  In case you forgot your password,<p>your OTP for reset password is
+  <strong>${verificationOTP}</strong></p>`;
+    await mail({ email, sub: "Forgot your password  |  Shaastra- 2022", body });
+}
+
   static primaryFields = [
     "id",
     "name",
@@ -101,7 +122,15 @@ export class User extends BaseEntity {
   role: UserRole;
 
 
-  // RELATIONS & FOREIGN KEYS
+  // RELATIONS
+  @OneToMany(() => Event, event => event.user)
+  events: Event[];
+
+  @ManyToMany(() => Event, (event) => event.registeredUsers)
+  registeredEvents: Event[];
+
+  @ManyToMany(() => Team, (team) => team.members)
+  teams: Team[]
 
  
 }
