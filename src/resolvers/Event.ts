@@ -6,6 +6,7 @@ import { User } from "../entities/User";
 import { Team } from "../entities/Team";
 import { MyContext } from "../utils/context";
 import { isRegisteredInEvent } from "../utils/isRegisteredInEvent";
+import { EventFAQ } from "../entities/EventFAQ";
 
 @ObjectType("GetEventsOutput")
 class GetEventsOutput {
@@ -135,6 +136,12 @@ export class EventResolver {
             if(userF.length === 1) getTeamID = team.id;
         }));
         return await Team.findOneOrFail(getTeamID, { relations: ["members"] });
+    }
+
+    @FieldResolver(() => [EventFAQ])
+    async faqs(@Root() { id }: Event ) {
+        const eventFAQs = await EventFAQ.find({ where: { event: id }, order: { updatedOn: "DESC" } });
+        return eventFAQs;
     }
  
 }
