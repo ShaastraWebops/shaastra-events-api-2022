@@ -1,3 +1,4 @@
+import { RegistraionType } from "../utils";
 import { Field, InputType } from "type-graphql";
 
 @InputType("AddEventInput")
@@ -11,6 +12,34 @@ export class AddEventInput {
   
     @Field()
     description: string;
+
+    @Field()
+    platform: string;
+
+    @Field()
+    requirements: string;
+
+    @Field()
+    pic: string;
+
+    @Field({ nullable: true })
+    registrationOpenTime: string;
+
+    @Field({ nullable: true })
+    registrationCloseTime: string;
+
+    @Field()
+    eventTimeFrom: string;
+
+    @Field()
+    eventTimeTo: string;
+
+    @Field(() => RegistraionType)
+    registrationType: RegistraionType;
+
+    @Field({ nullable: true })
+    teamSize: number;
+
     
 }
 
@@ -25,5 +54,32 @@ export class EditEventInput {
   
     @Field()
     description: string;
+
+    @Field()
+    platform: string;
+
+    @Field()
+    requirements: string;
+
+    @Field()
+    pic: string;
+
+    @Field({ nullable: true })
+    registrationOpenTime: string;
+
+    @Field({ nullable: true })
+    registrationCloseTime: string;
+
+    @Field()
+    eventTimeFrom: string;
+
+    @Field()
+    eventTimeTo: string;
+
+    @Field(() => RegistraionType)
+    registrationType: RegistraionType;
+
+    @Field({ nullable: true })
+    teamSize: number;
     
 }

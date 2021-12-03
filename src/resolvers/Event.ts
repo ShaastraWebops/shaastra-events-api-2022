@@ -1,10 +1,11 @@
 import { Event } from "../entities/Event";
 import { AddEventInput, EditEventInput } from "../inputs/Event";
 import { Arg, Authorized, Ctx, Field, FieldResolver, Mutation, ObjectType, Query, Resolver, Root } from "type-graphql";
-import { Vertical } from "../utils";
+import { RegistraionType, Vertical } from "../utils";
 import { User } from "../entities/User";
 import { Team } from "../entities/Team";
 import { MyContext } from "../utils/context";
+import { isRegisteredInEvent } from "../utils/isRegisteredInEvent";
 
 @ObjectType("GetEventsOutput")
 class GetEventsOutput {
@@ -44,6 +45,15 @@ export class EventResolver {
     async register(@Arg("EventID") id: string, @Ctx() { user }: MyContext ) {
         const event = await Event.findOneOrFail( id, { relations: ["registeredUsers"]});
 
+        const startDate = new Date(event.registrationOpenTime);
+        const currentDate = new Date();
+        const endDate = new Date(event.registrationCloseTime);
+        if(currentDate.getTime() <= startDate.getTime()) throw new Error("Registration is not opened yet");
+        if(currentDate.getTime() >= endDate.getTime()) throw new Error("Registration Closed");
+        if(!user) throw new Error("Login to Register")
+        if(event.registrationType === RegistraionType.NONE) throw new Error("Registration for this event is not required")
+        if(event.registrationType === RegistraionType.TEAM) throw new Error("Not allowed for individual registration")
+
         const userF = event.registeredUsers.filter((useR) => useR.id === user.id);
         if( userF.length === 1 ) throw new Error("User registered already");
 
@@ -52,6 +62,7 @@ export class EventResolver {
 
         return !!event;
     }
+
 
     @Query(() => GetEventsOutput)                                      
     async getEvents(
@@ -102,6 +113,14 @@ export class EventResolver {
         const count = await Team.count({ where: { event: id } });
         return count;
     }
+
+    @Authorized()
+    @FieldResolver(() => Boolean )
+    async isRegistered(@Root() { id }: Event, @Ctx() { user }: MyContext ) {
+        const res = await isRegisteredInEvent(id, user.id);
+        return res;
+    }
+
 
     @Authorized()
     @FieldResolver(() => Team, { nullable: true })

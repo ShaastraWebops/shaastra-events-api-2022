@@ -32,25 +32,37 @@ export class Event extends BaseEntity {
   @Field()
   description: string;
 
-  // @Column("timestamptz", { nullable: true })
-  // @Field({ nullable: true })
-  // registrationOpenTime: string;
+  @Column()
+  @Field({ nullable: true })
+  requirements: string;
 
-  // @Column("timestamptz", { nullable: true })
-  // @Field({ nullable: true })
-  // registrationCloseTime: string;
+  @Column()
+  @Field({ nullable: true })
+  platform: string;
 
-  // @Column("timestamptz")
-  // @Field()
-  // eventTimeFrom: string;
+  @Column()
+  @Field({ nullable: true })
+  pic: string;
 
-  // @Column("timestamptz")
-  // @Field()
-  // eventTimeTo: string;
+  @Column("timestamptz", { nullable: true })
+  @Field({ nullable: true })
+  registrationOpenTime: string;
 
-  // @Column()
-  // @Field()
-  // registrationType: RegistraionType;
+  @Column("timestamptz", { nullable: true })
+  @Field({ nullable: true })
+  registrationCloseTime: string;
+
+  @Column("timestamptz")
+  @Field()
+  eventTimeFrom: string;
+
+  @Column("timestamptz")
+  @Field()
+  eventTimeTo: string;
+
+  @Column()
+  @Field()
+  registrationType: RegistraionType;
 
   @Column({ default: 1 })
   @Field()

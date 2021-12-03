@@ -1,5 +1,6 @@
 import { Field, InputType } from "type-graphql";
 import { IsEmail} from "class-validator";
+import { UserRole } from "../utils";
 
 
 @InputType("CreateUserInput")
@@ -85,6 +86,7 @@ export class ResetPasswordInput {
 	newPassword: string;
 }
 
+
 @InputType("GetUsersFilter")
 export class GetUsersFilter {
 	@Field({ nullable: true })
@@ -93,4 +95,6 @@ export class GetUsersFilter {
 	@Field({ nullable: true })
 	school: string;
 
+	@Field({ nullable: true })
+	role: UserRole;
 }

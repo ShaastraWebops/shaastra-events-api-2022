@@ -1,6 +1,6 @@
 import { User } from "../entities/User";
 import { Arg, Authorized, Ctx, Field, FieldResolver, Mutation,ObjectType,Query,Resolver, Root} from "type-graphql";
-import { CreateUserInput,EditProfileInput,LoginInput, ResetPasswordInput } from "../inputs/User";
+import { CreateUserInput,EditProfileInput,GetUsersFilter,LoginInput, RequestForgotPassInput, ResetPasswordInput } from "../inputs/User";
 import jwt from "jsonwebtoken";
 import { MyContext } from "../utils/context";
 import bcrypt from "bcryptjs";
@@ -23,12 +23,12 @@ export class UserResolver {
     @Mutation(() => Boolean)
     async createUser(@Arg("data") data: CreateUserInput, @Ctx() {res} : MyContext) {
         const count = await User.count();
-        var shID = ( "0000" + (count + 1) ).slice(-4);
+        var shID = ( "00000" + (count + 1) ).slice(-5);
         const shaastraID = `SHA22${shID}`;
         const user = await User.create({ ...data, shaastraID }).save();
 
-        // const { name, email, id,verificationOTP} = user;
-        // await User.sendVerificationMail({ name, email, id, verifyOTP });
+        // const { name, email, verificationOTP} = user;
+        // await User.sendVerificationMail({ name, email,  verificationOTP });
 
         if(ADMINMAILLIST.includes(data.email)){
             const { affected } = await User.update(user?.id, { role: UserRole.ADMIN })
@@ -47,21 +47,19 @@ export class UserResolver {
       return !!user;
     }
 
-    // @Mutation(() => Boolean)
-    // async resendVerificationMail(@Arg("data") { email }: RequestForgotPassInput) {
-    //     const user = await User.findOneOrFail({ where: { email } });
-    //     const { name,verificationOTP , isVerified } = user;
+    @Mutation(() => Boolean)
+    async resendVerificationMail(@Arg("data") { email }: RequestForgotPassInput) {
+        const user = await User.findOneOrFail({ where: { email } });
+        const { name,verificationOTP , isVerified } = user;
 
-    //     if (isVerified) throw new Error("Email has been verified before");
+        if (isVerified) throw new Error("Email has been verified before");
 
-    //     await User.sendVerificationMail({ name, email , verificationOTP });
+        await User.sendVerificationMail({ name, email , verificationOTP });
 
-    //     return true;
-    // }
+        return true;
+    }
 
 
-
-    
     @Mutation(() => Boolean)
     async resetPassword(@Arg("data") { email, otp, newPassword }: ResetPasswordInput) {
         const user = await User.findOneOrFail({ where: {email} });
@@ -76,7 +74,6 @@ export class UserResolver {
     }
 
     
-
     @Mutation(() => Boolean)
     async getPasswordOTP(@Arg("email") email: string) {
       const user = await User.findOneOrFail({ where: { email } });
@@ -84,8 +81,8 @@ export class UserResolver {
       const passwordOTP = User.generateOTP();
       await User.update(user.id, { passwordOTP });
 
-    //   const { name} = user;
-    //   await User.sendForgotResetMail({ name, email, verificationOTP : passwordOTP });
+    const { name} = user;
+    await User.sendForgotResetMail({ name, email, verificationOTP : passwordOTP });
       return true;
     }
 
@@ -94,7 +91,7 @@ export class UserResolver {
         const user = await User.findOneOrFail({ where: { email} });
         if(!user) throw new Error("Account Not Found");
 
-        // if(!user.isVerified) throw new Error("Oops, email not verified!");
+        if(!user.isVerified) throw new Error("Oops, email not verified!");
 
         const checkPass = await bcrypt.compare(password, user?.password);
         if(!checkPass) throw new Error("Invalid Credential");
@@ -126,22 +123,23 @@ export class UserResolver {
     }
 
 
+    @Authorized(["ADMIN"])
     @Query(() => GetUsersOutput, { nullable: true })
     async getUsers(
-        // @Arg("filter", { nullable: true }) filter: GetUsersFilter,
-        // @Arg("skip", { nullable: true }) skip: number,
-        // @Arg("limit", { nullable: true }) take: number
-        ) {
+        @Arg("filter", { nullable: true }) filter : GetUsersFilter,
+        @Arg("skip", { nullable: true }) skip: number,
+        @Arg("limit", { nullable: true }) take: number) {
 
-        const users = await User.find({order: { name: "ASC" } });
+        const users = await User.find({ where: {...filter}, skip, take, order: { name: "ASC"} });
 
-        const count = await User.count();
+        const count = await User.count({ where: filter });
         return { users, count };
     }
 
+    @Authorized(["ADMIN"])
     @Query(() => Number)
     async getUsersCount() {
-        return await User.count({ where: { isVerified: true } });
+        return await User.count({ where: { role: UserRole.USER }});
     }
 
     @Authorized()
