@@ -45,6 +45,26 @@ export class Event extends BaseEntity {
   @Field({ nullable: true })
   pic: string;
 
+  @Column()
+  @Field({ nullable: true })
+  firstplace: string;
+
+  @Column()
+  @Field({ nullable: true })
+  secondplace: string;
+
+  @Column()
+  @Field({ nullable: true })
+  thirdplace: string;
+
+  @Column()
+  @Field({ nullable: true })
+  participation: string;
+
+  @Column()
+  @Field({ nullable: true })
+  finalistst: string;
+
   @Column("timestamptz", { nullable: true })
   @Field({ nullable: true })
   registrationOpenTime: string;

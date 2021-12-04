@@ -23,6 +23,21 @@ export class AddEventInput {
     pic: string;
 
     @Field({ nullable: true })
+    firstplace: string;
+
+    @Field({ nullable: true })
+    secondplace: string;
+
+    @Field({ nullable: true })
+    thirdplace: string;
+
+    @Field({ nullable: true })
+    participation: string;
+
+    @Field({ nullable: true })
+    finalistst: string;
+
+    @Field({ nullable: true })
     registrationOpenTime: string;
 
     @Field({ nullable: true })
@@ -63,6 +78,21 @@ export class EditEventInput {
 
     @Field()
     pic: string;
+
+    @Field({ nullable: true })
+    firstplace: string;
+
+    @Field({ nullable: true })
+    secondplace: string;
+
+    @Field({ nullable: true })
+    thirdplace: string;
+
+    @Field({ nullable: true })
+    participation: string;
+
+    @Field({ nullable: true })
+    finalistst: string;
 
     @Field({ nullable: true })
     registrationOpenTime: string;
