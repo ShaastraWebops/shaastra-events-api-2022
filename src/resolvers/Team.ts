@@ -31,8 +31,9 @@ export class TeamResolver {
         team.members = [];
 
         members.push(user.shaastraID);
+        console.log(members)
         await Promise.all(members?.map(async (member) => {
-            const userM = await User.findOneOrFail({ where: { sjID: member } });
+            const userM = await User.findOneOrFail({ where: { shaastraID: member } });
 
             const { shaastraID } = userM;
             if(!userM) throw new Error(`Invalid SJ ID ${shaastraID}`);
