@@ -6,6 +6,7 @@ import { MyContext } from "../utils/context";
 import bcrypt from "bcryptjs";
 import { ADMINMAILLIST, UserRole } from "../utils";
 import { Event } from "../entities/Event";
+import { Team } from "../entities/Team";
 
 
 @ObjectType("GetUsersOutput")
@@ -91,7 +92,7 @@ export class UserResolver {
         const user = await User.findOneOrFail({ where: { email} });
         if(!user) throw new Error("Account Not Found");
 
-        if(!user.isVerified) throw new Error("Oops, email not verified!");
+        // if(!user.isVerified) throw new Error("Oops, email not verified!");
 
         const checkPass = await bcrypt.compare(password, user?.password);
         if(!checkPass) throw new Error("Invalid Credential");
@@ -145,12 +146,12 @@ export class UserResolver {
     @Authorized()
     @FieldResolver(() => [Event])
     async registeredEvents(@Root() { id }: User ) {
-        let { registeredEvents} = await User.findOneOrFail( id, { relations: ["registeredEvents"] } );
+        let { registeredEvents, teams} = await User.findOneOrFail( id, { relations: ["registeredEvents", "teams"] } );
 
-        // await Promise.all(teams?.map(async (team) => {
-        //     const teaM = await Team.findOneOrFail(team.id, { relations: ["event"] });
-        //     registeredEvents.push(teaM.event);
-        // }));
+        await Promise.all(teams?.map(async (team) => {
+            const teaM = await Team.findOneOrFail(team.id, { relations: ["event"] });
+            registeredEvents.push(teaM.event);
+        }));
 
         return registeredEvents;
     }

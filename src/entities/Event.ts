@@ -45,23 +45,23 @@ export class Event extends BaseEntity {
   @Field({ nullable: true })
   pic: string;
 
-  @Column()
+  @Column({nullable : true})
   @Field({ nullable: true })
   firstplace: string;
 
-  @Column()
+  @Column({nullable : true})
   @Field({ nullable: true })
   secondplace: string;
 
-  @Column()
+  @Column({nullable : true})
   @Field({ nullable: true })
   thirdplace: string;
 
-  @Column()
+  @Column({nullable : true})
   @Field({ nullable: true })
   participation: string;
 
-  @Column()
+  @Column({nullable : true})
   @Field({ nullable: true })
   finalistst: string;
 
