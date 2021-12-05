@@ -38,6 +38,9 @@ export class AddEventInput {
     finalistst: string;
 
     @Field({ nullable: true })
+    registrationfee: string;
+
+    @Field({ nullable: true })
     registrationOpenTime: string;
 
     @Field({ nullable: true })
