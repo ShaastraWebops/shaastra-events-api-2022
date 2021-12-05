@@ -28,8 +28,8 @@ export class UserResolver {
         const shaastraID = `SHA22${shID}`;
         const user = await User.create({ ...data, shaastraID }).save();
 
-        // const { name, email, verificationOTP} = user;
-        // await User.sendVerificationMail({ name, email,  verificationOTP });
+        const { name, email, verificationOTP} = user;
+        await User.sendVerificationMail({ name, email,  verificationOTP });
 
         if(ADMINMAILLIST.includes(data.email)){
             const { affected } = await User.update(user?.id, { role: UserRole.ADMIN })
@@ -92,7 +92,7 @@ export class UserResolver {
         const user = await User.findOneOrFail({ where: { email} });
         if(!user) throw new Error("Account Not Found");
 
-        // if(!user.isVerified) throw new Error("Oops, email not verified!");
+        if(!user.isVerified) throw new Error("Oops, email not verified!");
 
         const checkPass = await bcrypt.compare(password, user?.password);
         if(!checkPass) throw new Error("Invalid Credential");
