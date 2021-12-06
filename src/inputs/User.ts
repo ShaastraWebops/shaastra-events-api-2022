@@ -47,24 +47,33 @@ export class LoginInput {
 
 @InputType("EditProfileInput")
 export class EditProfileInput {
-	@Field({ nullable: true })
-	name?: string;
 
-	@Field({ nullable: true })
-	password?: string;
+	@Field()
+	name: string;
 
-	// @Field({ nullable: true })
-	// @Length(10, 10)
-	// mobile?: string;
+	@Field()
+	@IsEmail()
+	email: string;
+	
+	@Field()
+    mobile: string;
 
-	@Field({ nullable: true })
-	school?: string;
+	@Field()
+	college: string;
 
-	@Field({ nullable: true })
-	city?: string;
+    @Field()
+	department: string;
 
-	@Field({ nullable: true })
-	state?: string;
+	@Field()
+	state: string;
+
+	@Field()
+	city: string;
+
+    @Field()
+	address: string;
+	
+
 }
 
 @InputType("RequestForgotPassInput")
