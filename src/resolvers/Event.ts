@@ -127,15 +127,18 @@ export class EventResolver {
     @FieldResolver(() => Team, { nullable: true })
     async yourTeam(@Root() { id }: Event, @Ctx() { user }: MyContext) {
         const event = await Event.findOneOrFail(id, { relations: ["registeredTeam"] });
-
+        console.log(event)
         let getTeamID;
         await Promise.all(event.registeredTeam?.map(async (team) => {
             const teaM = await Team.findOneOrFail(team.id, { relations: ["members"], select: ["id", "name"] });
-    
+            console.log("!",teaM)
             const userF = teaM.members.filter((member) => member.id === user.id);
             if(userF.length === 1) getTeamID = team.id;
         }));
-        return await Team.findOneOrFail(getTeamID, { relations: ["members"] });
+        const team = await Team.findOne(getTeamID, { relations: ["members"] });
+        if(team) return team
+
+        return null
     }
 
     @FieldResolver(() => [EventFAQ])
