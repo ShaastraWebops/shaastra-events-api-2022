@@ -98,6 +98,9 @@ export class EditEventInput {
     finalistst: string;
 
     @Field({ nullable: true })
+    registrationfee: string;
+
+    @Field({ nullable: true })
     registrationOpenTime: string;
 
     @Field({ nullable: true })
