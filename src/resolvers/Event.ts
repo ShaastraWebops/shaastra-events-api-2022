@@ -21,10 +21,10 @@ class GetEventsOutput {
 export class EventResolver {
 
     @Authorized(["ADMIN"])
-    @Mutation(()=> Boolean)
+    @Mutation(()=> Event)
     async addEvent(@Arg("data") data: AddEventInput ){
         const event = await Event.create({...data}).save();
-        return !!event;
+        return event;
     }
 
     @Authorized(["ADMIN"])
