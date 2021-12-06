@@ -8,7 +8,7 @@ export const authChecker: AuthChecker<MyContext> = async (
   if (!user) {
     if(roles.length >0 && roles[0] === "ADMIN") return false
     else
-    throw new Error("User Not logged in")
+    throw new Error("Please login to continue")
   };
   if (roles.length === 0) return true;
   if (roles.includes(user.role)) return true;
