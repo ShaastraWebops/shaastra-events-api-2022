@@ -77,7 +77,7 @@ export class UserResolver {
     
     @Mutation(() => Boolean)
     async getPasswordOTP(@Arg("email") email: string) {
-      const user = await User.findOneOrFail({ where: { email } });
+      const user = await User.findOne({ where: { email } });
       if(!user) throw new Error("Email Not found");
       const passwordOTP = User.generateOTP();
       await User.update(user.id, { passwordOTP });
