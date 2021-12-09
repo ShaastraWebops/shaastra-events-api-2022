@@ -1,7 +1,7 @@
 import { EventFAQ } from "../entities/EventFAQ";
 import { Event } from "../entities/Event";
 import { Arg, Authorized, Mutation, Resolver } from "type-graphql";
-import { CreateEventFAQInput, EditEventFAQInput } from "../inputs/EventFAQ";
+import { CreateEventFAQInput, EditEventFAQInput } from "../inputs/EVENTFAQ";
 
 @Resolver(EventFAQ)
 export class EventFAQResolver {
