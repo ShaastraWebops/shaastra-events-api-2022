@@ -14,27 +14,38 @@ import {
 import { Team } from "./Team";
 import { Event } from "./Event";
 import { mail } from "../utils/mail";
+import EventPay from "./EventPay";
 
-registerEnumType( UserRole, { name: "UserRole" } );
+registerEnumType(UserRole, { name: "UserRole" });
 
 @Entity("User")
 @ObjectType("User")
 export class User extends BaseEntity {
-
-   
-  static async sendVerificationMail({ name, email , verificationOTP}: SendVerificationMailOptions) {
-    console.log("name",name,email)
-    const  body= `Hello <b>${name}</b>,<br><br>
+  static async sendVerificationMail({
+    name,
+    email,
+    verificationOTP,
+  }: SendVerificationMailOptions) {
+    console.log("name", name, email);
+    const body = `Hello <b>${name}</b>,<br><br>
     Thanks for signing up!<br><br><p>You verification code is <strong>${verificationOTP}</strong></p>`;
-    await mail({ email, sub: "Complete your Verification | Shaastra- 2022", body });
-}
+    await mail({
+      email,
+      sub: "Complete your Verification | Shaastra- 2022",
+      body,
+    });
+  }
 
-static async sendForgotResetMail({ name, email , verificationOTP}: SendVerificationMailOptions) {
-  const  body= `Hello <b>${name}</b>,<br><br>
+  static async sendForgotResetMail({
+    name,
+    email,
+    verificationOTP,
+  }: SendVerificationMailOptions) {
+    const body = `Hello <b>${name}</b>,<br><br>
   In case you forgot your password,<p>your OTP for reset password is
   <strong>${verificationOTP}</strong></p>`;
     await mail({ email, sub: "Forgot your password  |  Shaastra- 2022", body });
-}
+  }
 
   static primaryFields = [
     "id",
@@ -81,7 +92,7 @@ static async sendForgotResetMail({ name, email , verificationOTP}: SendVerificat
   @Column()
   @Field()
   mobile: string;
-  
+
   @Column()
   @Field()
   college: string;
@@ -117,20 +128,20 @@ static async sendForgotResetMail({ name, email , verificationOTP}: SendVerificat
   @Column({ nullable: true })
   passwordOTP: string;
 
-  @Column("enum", { enum: UserRole, default: UserRole.USER})
+  @Column("enum", { enum: UserRole, default: UserRole.USER })
   @Field(() => UserRole)
   role: UserRole;
 
-
   // RELATIONS
-  @OneToMany(() => Event, event => event.user)
+  @OneToMany(() => Event, (event) => event.user)
   events: Event[];
 
   @ManyToMany(() => Event, (event) => event.registeredUsers)
   registeredEvents: Event[];
 
   @ManyToMany(() => Team, (team) => team.members)
-  teams: Team[]
+  teams: Team[];
 
- 
+  @OneToMany(() => EventPay, (eventPay) => eventPay.user)
+  eventsPay: EventPay[];
 }

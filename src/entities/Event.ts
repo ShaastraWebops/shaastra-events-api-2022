@@ -1,18 +1,28 @@
 import cuid from "cuid";
 import { RegistraionType } from "../utils";
 import { Field, ID, ObjectType, registerEnumType } from "type-graphql";
-import { BaseEntity, BeforeInsert, Column, Entity, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryColumn } from "typeorm";
+import {
+  BaseEntity,
+  BeforeInsert,
+  Column,
+  Entity,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  PrimaryColumn,
+} from "typeorm";
 import { Team } from "./Team";
 import { User } from "./User";
 import { EventFAQ } from "./EventFAQ";
+import EventPay from "./EventPay";
 
-registerEnumType( RegistraionType, { name: "RegistraionType" } );
+registerEnumType(RegistraionType, { name: "RegistraionType" });
 
 @Entity("Event")
 @ObjectType("Event")
 export class Event extends BaseEntity {
- 
-@BeforeInsert()
+  @BeforeInsert()
   setId() {
     this.id = cuid();
   }
@@ -45,27 +55,27 @@ export class Event extends BaseEntity {
   @Field({ nullable: true })
   pic: string;
 
-  @Column({nullable : true})
+  @Column({ nullable: true })
   @Field({ nullable: true })
   firstplace: string;
 
-  @Column({nullable : true})
+  @Column({ nullable: true })
   @Field({ nullable: true })
   secondplace: string;
 
-  @Column({nullable : true})
+  @Column({ nullable: true })
   @Field({ nullable: true })
   thirdplace: string;
 
-  @Column({nullable : true})
+  @Column({ nullable: true })
   @Field({ nullable: true })
   participation: string;
 
-  @Column({nullable : true})
+  @Column({ nullable: true })
   @Field({ nullable: true })
   finalistst: string;
 
-  @Column({nullable : true})
+  @Column({ nullable: true })
   @Field({ nullable: true })
   registrationfee: string;
 
@@ -95,7 +105,7 @@ export class Event extends BaseEntity {
 
   //Relations
 
-  @ManyToOne(() => User, user => user.events)
+  @ManyToOne(() => User, (user) => user.events)
   user: User;
 
   @ManyToMany(() => User, (user) => user.registeredEvents)
@@ -105,9 +115,9 @@ export class Event extends BaseEntity {
   @OneToMany(() => Team, (team) => team.event)
   registeredTeam: Team[];
 
-  @OneToMany(() => EventFAQ, faqs => faqs.event)
+  @OneToMany(() => EventPay, (eventPay) => eventPay.event)
+  eventsPay: EventPay[];
+
+  @OneToMany(() => EventFAQ, (faqs) => faqs.event)
   faqs: EventFAQ[];
-
-
-
 }
