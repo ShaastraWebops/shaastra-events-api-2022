@@ -87,12 +87,12 @@ export class Event extends BaseEntity {
   @Field({ nullable: true })
   registrationCloseTime: string;
 
-  @Column("timestamptz")
-  @Field()
+  @Column("timestamptz",{ nullable: true })
+  @Field({ nullable: true })
   eventTimeFrom: string;
 
-  @Column("timestamptz")
-  @Field()
+  @Column("timestamptz",{ nullable: true })
+  @Field({ nullable: true })
   eventTimeTo: string;
 
   @Column()

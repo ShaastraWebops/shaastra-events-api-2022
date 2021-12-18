@@ -22,6 +22,8 @@ import Razorpay from "razorpay";
 import crypto from "crypto";
 import EventPay from "../entities/EventPay";
 import { UpdateEventPayInput } from "../inputs/EventPay";
+import { parse } from "json2csv";
+import { getRepository } from "typeorm";
 
 var instance = new Razorpay({
   key_id: process.env.RAZORPAY_ID!,
@@ -79,6 +81,7 @@ export class EventResolver {
       relations: ["registeredUsers"],
     });
 
+    if(event.registrationOpenTime && event.registrationCloseTime){
     const startDate = new Date(event.registrationOpenTime);
     const currentDate = new Date();
     const endDate = new Date(event.registrationCloseTime);
@@ -91,6 +94,7 @@ export class EventResolver {
       throw new Error("Registration for this event is not required");
     if (event.registrationType === RegistraionType.TEAM)
       throw new Error("Not allowed for individual registration");
+    }
 
     const userF = event.registeredUsers.filter((useR) => useR.id === user.id);
     if (userF.length === 1) throw new Error("User registered already");
@@ -184,6 +188,46 @@ export class EventResolver {
     const event = await Event.findOneOrFail({ where: { id } });
     return event;
   }
+
+  @Authorized(["ADMIN"])
+  @Query(() => String)
+  async exportCSV(@Arg("EventID") id: string) {
+      const event = await Event.findOneOrFail(id);
+      
+      const eventRepository = getRepository(Event);
+
+      let csv;
+      if(event.registrationType === RegistraionType.INDIVIDUAL) {
+          const registeredUsers = await eventRepository.createQueryBuilder("event")
+          .where("event.id = :eventId", { eventId: id })
+          .leftJoinAndSelect("event.registeredUsers", "user")
+          .select(["user.name", "user.email", "user.shaastraID", "user.mobile", "user.college","user.department"])
+          .execute();
+
+          csv =  parse(registeredUsers);
+      } else {
+          const registeredTeams = await Team.find({ where: { event }, relations: ["members"], select: ["name"] })
+          let csvData = '"team name"';
+          const csvHeading = ',"name","email","shaastraID","mobile,"college","department"';
+          for (let i = 0; i < event.teamSize; i++) {
+              csvData += csvHeading;
+          }
+
+          registeredTeams.map((registeredTeam) => {
+
+              csvData += `\n "${registeredTeam.name}"`;
+
+              registeredTeam.members.map((member) => {
+                  const { name, email, shaastraID, mobile , college, department } = member;
+                  csvData += `, "${name}","${email}","${shaastraID}","${mobile}","${college}","${department}`;
+              })
+          })
+          csv = csvData;
+      }
+
+      return csv
+  }
+
 
   @Authorized(["ADMIN"])
   @FieldResolver(() => [User])

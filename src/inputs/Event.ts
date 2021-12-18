@@ -13,13 +13,13 @@ export class AddEventInput {
     @Field()
     description: string;
 
-    @Field()
+    @Field({ nullable: true })
     platform: string;
 
-    @Field()
+    @Field({ nullable: true })
     requirements: string;
 
-    @Field()
+    @Field({ nullable: true })
     pic: string;
 
     @Field({ nullable: true })
@@ -46,13 +46,13 @@ export class AddEventInput {
     @Field({ nullable: true })
     registrationCloseTime: string;
 
-    @Field()
+    @Field({ nullable: true })
     eventTimeFrom: string;
 
-    @Field()
+    @Field({ nullable: true })
     eventTimeTo: string;
 
-    @Field(() => RegistraionType)
+    @Field(() => RegistraionType,{ nullable: true })
     registrationType: RegistraionType;
 
     @Field({ nullable: true })
@@ -73,13 +73,13 @@ export class EditEventInput {
     @Field()
     description: string;
 
-    @Field()
+    @Field({ nullable: true })
     platform: string;
 
-    @Field()
+    @Field({ nullable: true })
     requirements: string;
 
-    @Field()
+    @Field({ nullable: true })
     pic: string;
 
     @Field({ nullable: true })
@@ -106,16 +106,16 @@ export class EditEventInput {
     @Field({ nullable: true })
     registrationCloseTime: string;
 
-    @Field()
+    @Field({ nullable: true })
     eventTimeFrom: string;
 
-    @Field()
+    @Field({ nullable: true })
     eventTimeTo: string;
 
-    @Field(() => RegistraionType)
+    @Field(() => RegistraionType,{ nullable: true })
     registrationType: RegistraionType;
 
     @Field({ nullable: true })
     teamSize: number;
-    
+
 }

@@ -7,6 +7,8 @@ import bcrypt from "bcryptjs";
 import { ADMINMAILLIST, UserRole } from "../utils";
 import { Event } from "../entities/Event";
 import { Team } from "../entities/Team";
+import { parse } from "json2csv";
+
 
 
 @ObjectType("GetUsersOutput")
@@ -98,7 +100,7 @@ export class UserResolver {
         if(!checkPass) throw new Error("Invalid Credential");
 
         let token = jwt.sign({ id: user.id }, process.env.JWT_SECRET || "secret");
-        res.cookie("token", token )
+        res.cookie("token", token ,{ httpOnly: false})
 
         return user;
     }
@@ -140,8 +142,17 @@ export class UserResolver {
     @Authorized(["ADMIN"])
     @Query(() => Number)
     async getUsersCount() {
-        return await User.count({ where: { role: UserRole.USER }});
+        return await User.count({ where: { role: UserRole.USER , isVerified : true}});
     }
+
+    @Authorized(["ADMIN"])
+    @Query(() => String)
+    async getUsersDataCSV() {
+        const users = await User.find( { where : {role : UserRole.USER , isVerified : true} , select : ["shaastraID","name","email","mobile","college","department","city","state","address"]})
+         
+        return parse(users);
+    }
+
 
     @Authorized()
     @FieldResolver(() => [Event])
