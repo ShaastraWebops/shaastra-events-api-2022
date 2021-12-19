@@ -30,8 +30,8 @@ export class UserResolver {
         const shaastraID = `SHA22${shID}`;
         const user = await User.create({ ...data, shaastraID }).save();
 
-        // const { name, email, verificationOTP} = user;
-        // await User.sendVerificationMail({ name, email,  verificationOTP });
+        const { name, email, verificationOTP} = user;
+        await User.sendVerificationMail({ name, email,  verificationOTP });
 
         if(ADMINMAILLIST.includes(data.email)){
             const { affected } = await User.update(user?.id, { role: UserRole.ADMIN })

@@ -1,5 +1,5 @@
 import { Event } from "../entities/Event";
-import { AddEventInput, EditEventInput } from "../inputs/Event";
+import { AddEventInput, AddTimingsInput, EditEventInput} from "../inputs/Event";
 import {
   Arg,
   Authorized,
@@ -24,6 +24,7 @@ import EventPay from "../entities/EventPay";
 import { UpdateEventPayInput } from "../inputs/EventPay";
 import { parse } from "json2csv";
 import { getRepository } from "typeorm";
+import { Timeline } from "../entities/Timeline";
 
 var instance = new Razorpay({
   key_id: process.env.RAZORPAY_ID!,
@@ -55,6 +56,32 @@ export class EventResolver {
   async addEvent(@Arg("data") data: AddEventInput) {
     const event = await Event.create({ ...data }).save();
     return event;
+  }
+
+  @Authorized(["ADMIN"])
+  @Mutation(() => Boolean)
+  async addTimings(@Arg("data") data : AddTimingsInput , @Arg("id") id : string ) {
+    const event = await Event.findOne(id,{relations : ['timings']});
+   
+    const timeline = new Timeline();
+    timeline.name = data.name;
+    timeline.time = data.time;
+    await timeline.save();
+    if(event?.timings.length === 0) {
+      event.timings = []
+    }
+    event?.timings.push(timeline);
+    await event?.save();
+
+    return true;
+  }
+
+  @Authorized(["ADMIN"])
+  @Mutation(() => Boolean)
+  async deleteTimings(@Arg("id") id : string ) {
+    console.log("id",id)
+    const { affected } = await Timeline.delete(id);
+    return !!affected;
   }
 
   @Authorized(["ADMIN"])
@@ -247,6 +274,15 @@ export class EventResolver {
     });
 
     return event.registeredUsers.length;
+  }
+
+  @FieldResolver(() => [Timeline])
+  async eventtimings(@Root() { id }: Event) {
+    const event = await Event.findOneOrFail(id, {
+      relations: ["timings"],
+    });
+
+    return event.timings;
   }
 
   @Authorized(["ADMIN"])

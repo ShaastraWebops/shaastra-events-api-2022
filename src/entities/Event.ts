@@ -16,6 +16,7 @@ import { Team } from "./Team";
 import { User } from "./User";
 import { EventFAQ } from "./EventFAQ";
 import EventPay from "./EventPay";
+import { Timeline } from "./Timeline";
 
 registerEnumType(RegistraionType, { name: "RegistraionType" });
 
@@ -104,6 +105,9 @@ export class Event extends BaseEntity {
   teamSize: number;
 
   //Relations
+
+  @OneToMany(() => Timeline , (time) => time.event)
+  timings : Timeline[];
 
   @ManyToOne(() => User, (user) => user.events)
   user: User;

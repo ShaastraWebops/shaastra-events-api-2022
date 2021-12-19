@@ -61,6 +61,15 @@ export class AddEventInput {
     
 }
 
+@InputType("AddTimingsInput")
+export class AddTimingsInput{
+   @Field()
+   name : string
+
+   @Field()
+   time : string
+
+}
 @InputType("EditEventInput")
 export class EditEventInput {
 
