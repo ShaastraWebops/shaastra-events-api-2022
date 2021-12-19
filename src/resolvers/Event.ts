@@ -116,12 +116,12 @@ export class EventResolver {
       throw new Error("Registration is not opened yet");
     if (currentDate.getTime() >= endDate.getTime())
       throw new Error("Registration Closed");
-    if (!user) throw new Error("Login to Register");
-    if (event.registrationType === RegistraionType.NONE)
-      throw new Error("Registration for this event is not required");
     if (event.registrationType === RegistraionType.TEAM)
       throw new Error("Not allowed for individual registration");
     }
+    if (!user) throw new Error("Login to Register");
+    if (event.registrationType === RegistraionType.NONE)
+    throw new Error("Registration for this event is not required");
 
     const userF = event.registeredUsers.filter((useR) => useR.id === user.id);
     if (userF.length === 1) throw new Error("User registered already");
