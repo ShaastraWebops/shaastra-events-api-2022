@@ -96,6 +96,18 @@ export class EventResolver {
 
   @Authorized(["ADMIN"])
   @Mutation(() => Boolean)
+  async earlybidoffer(
+    @Arg("eventID") id: string,
+    @Arg("amount") amount : string
+  ) {
+    const {affected} = await Event.update(id, {earlybidoffer : amount})
+
+    return affected === 1 ;
+
+  }
+
+  @Authorized(["ADMIN"])
+  @Mutation(() => Boolean)
   async deleteEvent(@Arg("id") id: string) {
     const { affected } = await Event.delete(id);
     return !!affected;
@@ -132,11 +144,20 @@ export class EventResolver {
     } else {
       /* Create the order id */
       let orderId: string = "";
-      const options = {
+
+      const currentdate = new Date();
+      const deadline = new Date("December 27, 2021 23:59:59");
+
+      var options = {
         amount: Number(event.registrationfee) * 100,
         currency: "INR",
         receipt: event.name,
       };
+
+      if(event.earlybidoffer && (deadline.getTime() - currentdate.getTime()) > 0){
+        options.amount = Number(event.earlybidoffer) * 100
+      }
+
       await instance.orders.create(options, function (err: any, order: any) {
         if (err) throw new Error("Order Creation failed. Please Retry");
         orderId = order.id;

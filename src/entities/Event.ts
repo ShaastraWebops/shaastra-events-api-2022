@@ -80,6 +80,10 @@ export class Event extends BaseEntity {
   @Field({ nullable: true })
   registrationfee: string;
 
+  @Column({ nullable: true })
+  @Field({ nullable: true })
+  earlybidoffer: string;
+
   @Column("timestamptz", { nullable: true })
   @Field({ nullable: true })
   registrationOpenTime: string;
