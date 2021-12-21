@@ -104,7 +104,7 @@ export class EventResolver {
       const options = {
         amount: Number(event.registrationfee) * 100,
         currency: "INR",
-        receipt: event.name,
+        receipt: event.name.slice(0, 35),
       };
       await instance.orders.create(options, function (err: any, order: any) {
         if (err) throw new Error("Order Creation failed. Please Retry");
