@@ -151,7 +151,7 @@ export class EventResolver {
       var options = {
         amount: Number(event.registrationfee) * 100,
         currency: "INR",
-        receipt: event.name.slice(0, 35),
+        receipt: user.id + "_" + event.name.slice(0, 24),
       };
 
       if(event.earlybidoffer && (deadline.getTime() - currentdate.getTime()) > 0){
