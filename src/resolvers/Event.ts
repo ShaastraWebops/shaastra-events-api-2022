@@ -1,5 +1,5 @@
 import { Event } from "../entities/Event";
-import { AddEventInput, EditEventInput } from "../inputs/Event";
+import { AddEventInput, AddTimingsInput, EditEventInput} from "../inputs/Event";
 import {
   Arg,
   Authorized,
@@ -22,6 +22,9 @@ import Razorpay from "razorpay";
 import crypto from "crypto";
 import EventPay from "../entities/EventPay";
 import { UpdateEventPayInput } from "../inputs/EventPay";
+import { parse } from "json2csv";
+import { getRepository } from "typeorm";
+import { Timeline } from "../entities/Timeline";
 
 var instance = new Razorpay({
   key_id: process.env.RAZORPAY_ID!,
@@ -57,12 +60,50 @@ export class EventResolver {
 
   @Authorized(["ADMIN"])
   @Mutation(() => Boolean)
+  async addTimings(@Arg("data") data : AddTimingsInput , @Arg("id") id : string ) {
+    const event = await Event.findOne(id,{relations : ['timings']});
+   
+    const timeline = new Timeline();
+    timeline.name = data.name;
+    timeline.time = data.time;
+    await timeline.save();
+    if(event?.timings.length === 0) {
+      event.timings = []
+    }
+    event?.timings.push(timeline);
+    await event?.save();
+
+    return true;
+  }
+
+  @Authorized(["ADMIN"])
+  @Mutation(() => Boolean)
+  async deleteTimings(@Arg("id") id : string ) {
+    console.log("id",id)
+    const { affected } = await Timeline.delete(id);
+    return !!affected;
+  }
+
+  @Authorized(["ADMIN"])
+  @Mutation(() => Boolean)
   async editEvent(
     @Arg("data") data: EditEventInput,
     @Arg("eventID") id: string
   ) {
     const { affected } = await Event.update(id, { ...data });
     return affected === 1;
+  }
+
+  @Authorized(["ADMIN"])
+  @Mutation(() => Boolean)
+  async earlybidoffer(
+    @Arg("eventID") id: string,
+    @Arg("amount") amount : string
+  ) {
+    const {affected} = await Event.update(id, {earlybidoffer : amount})
+
+    return affected === 1 ;
+
   }
 
   @Authorized(["ADMIN"])
@@ -79,6 +120,7 @@ export class EventResolver {
       relations: ["registeredUsers"],
     });
 
+    if(event.registrationOpenTime && event.registrationCloseTime){
     const startDate = new Date(event.registrationOpenTime);
     const currentDate = new Date();
     const endDate = new Date(event.registrationCloseTime);
@@ -86,11 +128,12 @@ export class EventResolver {
       throw new Error("Registration is not opened yet");
     if (currentDate.getTime() >= endDate.getTime())
       throw new Error("Registration Closed");
-    if (!user) throw new Error("Login to Register");
-    if (event.registrationType === RegistraionType.NONE)
-      throw new Error("Registration for this event is not required");
     if (event.registrationType === RegistraionType.TEAM)
       throw new Error("Not allowed for individual registration");
+    }
+    if (!user) throw new Error("Login to Register");
+    if (event.registrationType === RegistraionType.NONE)
+    throw new Error("Registration for this event is not required");
 
     const userF = event.registeredUsers.filter((useR) => useR.id === user.id);
     if (userF.length === 1) throw new Error("User registered already");
@@ -101,11 +144,20 @@ export class EventResolver {
     } else {
       /* Create the order id */
       let orderId: string = "";
-      const options = {
+
+      const currentdate = new Date();
+      const deadline = new Date("December 27, 2021 23:59:59");
+
+      var options = {
         amount: Number(event.registrationfee) * 100,
         currency: "INR",
         receipt: event.name.slice(0, 35),
       };
+
+      if(event.earlybidoffer && (deadline.getTime() - currentdate.getTime()) > 0){
+        options.amount = Number(event.earlybidoffer) * 100
+      }
+
       await instance.orders.create(options, function (err: any, order: any) {
         if (err) throw new Error("Order Creation failed. Please Retry");
         orderId = order.id;
@@ -186,6 +238,46 @@ export class EventResolver {
   }
 
   @Authorized(["ADMIN"])
+  @Query(() => String)
+  async exportCSV(@Arg("EventID") id: string) {
+      const event = await Event.findOneOrFail(id);
+      
+      const eventRepository = getRepository(Event);
+
+      let csv;
+      if(event.registrationType === RegistraionType.INDIVIDUAL) {
+          const registeredUsers = await eventRepository.createQueryBuilder("event")
+          .where("event.id = :eventId", { eventId: id })
+          .leftJoinAndSelect("event.registeredUsers", "user")
+          .select(["user.name", "user.email", "user.shaastraID", "user.mobile", "user.college","user.department"])
+          .execute();
+
+          csv =  parse(registeredUsers);
+      } else {
+          const registeredTeams = await Team.find({ where: { event }, relations: ["members"], select: ["name"] })
+          let csvData = '"team name"';
+          const csvHeading = ',"name","email","shaastraID","mobile,"college","department"';
+          for (let i = 0; i < event.teamSize; i++) {
+              csvData += csvHeading;
+          }
+
+          registeredTeams.map((registeredTeam) => {
+
+              csvData += `\n "${registeredTeam.name}"`;
+
+              registeredTeam.members.map((member) => {
+                  const { name, email, shaastraID, mobile , college, department } = member;
+                  csvData += `, "${name}","${email}","${shaastraID}","${mobile}","${college}","${department}`;
+              })
+          })
+          csv = csvData;
+      }
+
+      return csv
+  }
+
+
+  @Authorized(["ADMIN"])
   @FieldResolver(() => [User])
   async registeredUser(@Root() { id }: Event) {
     const event = await Event.findOneOrFail(id, {
@@ -203,6 +295,15 @@ export class EventResolver {
     });
 
     return event.registeredUsers.length;
+  }
+
+  @FieldResolver(() => [Timeline])
+  async eventtimings(@Root() { id }: Event) {
+    const event = await Event.findOneOrFail(id, {
+      relations: ["timings"],
+    });
+
+    return event.timings;
   }
 
   @Authorized(["ADMIN"])

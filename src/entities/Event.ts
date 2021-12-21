@@ -16,6 +16,7 @@ import { Team } from "./Team";
 import { User } from "./User";
 import { EventFAQ } from "./EventFAQ";
 import EventPay from "./EventPay";
+import { Timeline } from "./Timeline";
 
 registerEnumType(RegistraionType, { name: "RegistraionType" });
 
@@ -79,6 +80,10 @@ export class Event extends BaseEntity {
   @Field({ nullable: true })
   registrationfee: string;
 
+  @Column({ nullable: true })
+  @Field({ nullable: true })
+  earlybidoffer: string;
+
   @Column("timestamptz", { nullable: true })
   @Field({ nullable: true })
   registrationOpenTime: string;
@@ -87,12 +92,12 @@ export class Event extends BaseEntity {
   @Field({ nullable: true })
   registrationCloseTime: string;
 
-  @Column("timestamptz")
-  @Field()
+  @Column("timestamptz",{ nullable: true })
+  @Field({ nullable: true })
   eventTimeFrom: string;
 
-  @Column("timestamptz")
-  @Field()
+  @Column("timestamptz",{ nullable: true })
+  @Field({ nullable: true })
   eventTimeTo: string;
 
   @Column()
@@ -104,6 +109,9 @@ export class Event extends BaseEntity {
   teamSize: number;
 
   //Relations
+
+  @OneToMany(() => Timeline , (time) => time.event)
+  timings : Timeline[];
 
   @ManyToOne(() => User, (user) => user.events)
   user: User;

@@ -15,14 +15,16 @@ export class TeamResolver {
     async createTeamAndRegister(@Arg("data") { name, members, eventID }: CreateTeamInput, @Ctx() { user }: MyContext) {
         const event = await Event.findOneOrFail(eventID);
 
+        if(event.registrationOpenTime && event.registrationCloseTime){
         const startDate = new Date(event.registrationOpenTime);
         const currentDate = new Date();
         const endDate = new Date(event.registrationCloseTime);
         if(currentDate.getTime() <= startDate.getTime()) throw new Error("Registration is not opened yet");
         if(currentDate.getTime() >= endDate.getTime()) throw new Error("Registration Closed");
-
+        }
+        if (!user) throw new Error("Login to Register");
         if(event.registrationType === RegistraionType.NONE) throw new Error("Registration for this event is not required")
-        if(event.registrationType === RegistraionType.INDIVIDUAL) throw new Error("Not allowed for team registration")
+        // if(event.registrationType === RegistraionType.INDIVIDUAL) throw new Error("Not allowed for team registration")
         if(members?.length > event.teamSize) throw new Error("Team limit exceed");
 
         const team =  Team.create();
