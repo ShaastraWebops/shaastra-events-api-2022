@@ -119,7 +119,9 @@ export class EventResolver {
     const event = await Event.findOneOrFail(id, {
       relations: ["registeredUsers"],
     });
-
+    if(id === "ckxljoxqa00639bp7gu9o1sz9" && event.registeredUsers.length >= 150){
+      throw new Error("Maximum registrations reached")
+    }
     if(event.registrationOpenTime && event.registrationCloseTime){
     const startDate = new Date(event.registrationOpenTime);
     const currentDate = new Date();
