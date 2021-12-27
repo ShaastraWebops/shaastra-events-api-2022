@@ -9,12 +9,14 @@ import {
   Entity,
   ManyToMany,
   OneToMany,
+  OneToOne,
   PrimaryColumn,
 } from "typeorm";
 import { Team } from "./Team";
 import { Event } from "./Event";
 import { mail } from "../utils/mail";
 import EventPay from "./EventPay";
+import { BlitzChess } from "./BlitzChess";
 
 registerEnumType(UserRole, { name: "UserRole" });
 
@@ -144,4 +146,9 @@ export class User extends BaseEntity {
 
   @OneToMany(() => EventPay, (eventPay) => eventPay.user)
   eventsPay: EventPay[];
+
+  @OneToOne(() => BlitzChess, chess=> chess.user ,{nullable : true} )
+  chessDetails : BlitzChess
+
+
 }
