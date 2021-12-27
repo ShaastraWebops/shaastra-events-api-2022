@@ -49,7 +49,7 @@ export class BlitzChessResolver {
         return chessDetails.user
     }
 
-    // @Authorized(["ADMIN"])
+    @Authorized(["ADMIN"])
     @Query(() => String)
   async getChessDetailsCSV() {
       
@@ -59,7 +59,7 @@ export class BlitzChessResolver {
           const registeredUsers = await userRepository.createQueryBuilder("user")
           .leftJoin(BlitzChess, "chess", "chess.userId = user.id")
           .where('user.chessDetails is not null')
-          .select(["user.name","user.shaastraID","user.mobile","chess.username","chess.rating","chess.title"])
+          .select(["user.name","user.shaastraID","user.mobile","user.email","chess.username","chess.rating","chess.title"])
           .execute()
           csv =  parse(registeredUsers);
       
