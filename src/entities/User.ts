@@ -7,6 +7,7 @@ import {
   BeforeInsert,
   Column,
   Entity,
+  JoinColumn,
   ManyToMany,
   OneToMany,
   OneToOne,
@@ -148,6 +149,7 @@ export class User extends BaseEntity {
   eventsPay: EventPay[];
 
   @OneToOne(() => BlitzChess, chess=> chess.user ,{nullable : true} )
+  @JoinColumn()
   chessDetails : BlitzChess
 
 
