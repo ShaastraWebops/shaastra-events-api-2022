@@ -278,6 +278,11 @@ export class EventResolver {
       return csv
   }
 
+  @Authorized(['ADMIN'])
+  @Query(()=> Number)
+ async getPaidUsersCount(){
+  return await EventPay.count({where : {isPaid : true}});
+ }
 
   @Authorized(["ADMIN"])
   @FieldResolver(() => [User])
