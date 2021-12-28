@@ -51,8 +51,8 @@ export class BlitzChessResolver {
       relations: ["user"],
       where: { user },
     });
-    if (chessDetails?.user.id) throw new Error("User Already Registered");
-
+    if(data.username === "") throw new Error("Please Enter the Username")
+    if(chessDetails?.isPaid) throw new Error("User Already Registered")
     /* Create the order id */
     let orderId: string = "";
 
@@ -66,11 +66,16 @@ export class BlitzChessResolver {
       orderId = order.id;
     });
     if (orderId === "") throw new Error("Order Creation failed. Please Retry");
-
+    if (chessDetails?.user.id){
+    await BlitzChess.update(chessDetails.id,{ ...data, orderId, user });
+    const details = await BlitzChess.findOne(chessDetails.id);
+    return details;
+    }else{
     const details = await BlitzChess.create({ ...data, orderId, user }).save();
     user.chessDetails = details;
     await user.save();
     return details;
+    }
   }
 
   @Mutation(() => Boolean)
