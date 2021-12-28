@@ -27,12 +27,12 @@ export class BlitzChess extends BaseEntity {
   @Field()
   username: string;
 
-  @Column()
-  @Field()
+  @Column({nullable : true})
+  @Field({nullable : true})
   rating: string;
 
-  @Column()
-  @Field()
+  @Column({nullable : true})
+  @Field({nullable : true})
   title: string;
 
   @Column()
