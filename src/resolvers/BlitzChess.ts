@@ -26,6 +26,7 @@ export class BlitzChessResolver {
     @Mutation(() => Boolean)
     async registerChess(@Arg("data") data : registerBlitzChessInput ,  @Ctx() { user }: MyContext ){
 
+        throw new Error("Registration not Opened yet")
         const chessDetails = await BlitzChess.findOne({relations : ['user'],where : {user}});
         if(chessDetails?.user.id) throw new Error("User Already Registered")
         const details = await BlitzChess.create({ ...data, user}).save();
