@@ -294,7 +294,7 @@ export class EventResolver {
     return event.registeredUsers;
   }
 
-  @Authorized(["ADMIN"])
+  // @Authorized(["ADMIN"])
   @FieldResolver(() => Number)
   async registeredUserCount(@Root() { id }: Event) {
     const event = await Event.findOneOrFail(id, {
