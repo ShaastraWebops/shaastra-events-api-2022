@@ -148,7 +148,7 @@ export class EventResolver {
       let orderId: string = "";
 
       const currentdate = new Date();
-      const deadline = new Date("December 30, 2021 23:59:59");
+      const deadline = new Date("January 1,2022 23:59:59");
 
       var options = {
         amount: Number(event.registrationfee) * 100,
