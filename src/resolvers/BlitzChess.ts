@@ -123,7 +123,7 @@ export class BlitzChessResolver {
     return chessDetails.user;
   }
 
-  @Authorized(["ADMIN"])
+  // @Authorized(["ADMIN"])
   @Query(() => String)
   async getChessDetailsCSV() {
     const userRepository = getRepository(User);
@@ -133,6 +133,7 @@ export class BlitzChessResolver {
       .createQueryBuilder("user")
       .leftJoin(BlitzChess, "chess", "chess.userId = user.id")
       .where("user.chessDetails is not null")
+      .andWhere("chess.isPaid = true")
       .select([
         "user.name",
         "user.shaastraID",
