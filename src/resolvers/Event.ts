@@ -323,7 +323,7 @@ export class EventResolver {
     return teams;
   }
 
-  @Authorized(["ADMIN"])
+  // @Authorized(["ADMIN"])
   @FieldResolver(() => Number)
   async registeredTeamCount(@Root() { id }: Event) {
     const count = await Team.count({ where: { event: id } });
