@@ -265,13 +265,12 @@ export class EventResolver {
 
           registeredTeams.map((registeredTeam) => {
 
-              csvData += `\n "${registeredTeam.name}"`;
+              csvData += `\n"${registeredTeam.name}"`;
 
               registeredTeam.members.map((member) => {
                   const { name, email, shaastraID, mobile , college, department } = member;
-                  csvData += `"${name}","${email}","${shaastraID}","${mobile}","${college}","${department}`;
+                  csvData += `,"${name}","${email}","${shaastraID}","${mobile}","${college}","${department}`;
               })
-              csvData += '\n'
           })
           csv = csvData;
       }
