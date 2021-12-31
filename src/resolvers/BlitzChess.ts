@@ -133,7 +133,7 @@ export class BlitzChessResolver {
       .createQueryBuilder("user")
       .leftJoin(BlitzChess, "chess", "chess.userId = user.id")
       .where("user.chessDetails is not null")
-      .andWhere("chess.isPaid = true")
+      // .andWhere("chess.isPaid = true")
       .select([
         "user.name",
         "user.shaastraID",
