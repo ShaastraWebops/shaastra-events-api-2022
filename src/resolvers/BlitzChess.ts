@@ -79,7 +79,7 @@ export class BlitzChessResolver {
   }
 
   @Mutation(() => Boolean)
-  async capturePaymentChess(@Arg("Input") data: CapturePaymentChessInput) {
+  async capturePaymentChess(@Arg("Input") data: CapturePaymentChessInput , @Ctx() {user} : MyContext) {
     try {
       /* Verify the signature */
       const body = data.orderId + "|" + data.payementId;
@@ -99,7 +99,9 @@ export class BlitzChessResolver {
           isPaid: true,
         }
       );
-
+      if(affected === 1){
+        await User.sendConfirmationMail({name : user.name,eventname : "Blitz Chess",email : user.email})
+      }
       return affected === 1;
     } catch (e) {
       throw new Error(e);

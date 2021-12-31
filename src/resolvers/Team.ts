@@ -44,7 +44,7 @@ export class TeamResolver {
 
             team.members.push(userM);
         }));
-
+        await Team.sendConfirmationMail({name : user.name , eventname : event.name,teamname : team.name,members : team.members,email : user.email})
         await team.save();
         return !!team;
     }

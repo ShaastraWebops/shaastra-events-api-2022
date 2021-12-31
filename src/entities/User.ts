@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import cuid from "cuid";
-import { SendVerificationMailOptions, UserRole } from "../utils";
+import { SendIndividualConfirmationMail, SendVerificationMailOptions, UserRole } from "../utils";
 import { Field, ID, ObjectType, registerEnumType } from "type-graphql";
 import {
   BaseEntity,
@@ -48,6 +48,15 @@ export class User extends BaseEntity {
   In case you forgot your password,<p>your OTP for reset password is
   <strong>${verificationOTP}</strong></p>`;
     await mail({ email, sub: "Forgot your password  |  Shaastra- 2022", body });
+  }
+  static async sendConfirmationMail({
+    name,
+    eventname,
+    email,
+  }: SendIndividualConfirmationMail) {
+    const body = `Hello <b>${name}</b>,<br><br>
+   Your registration for  <strong>${eventname}</strong> is successful`;
+    await mail({ email, sub: "Registration Successful |  Shaastra- 2022", body });
   }
 
   static primaryFields = [

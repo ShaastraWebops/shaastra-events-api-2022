@@ -1,3 +1,4 @@
+import { User } from "../entities/User";
 export enum UserRole {
     ADMIN = "ADMIN",
     USER = "USER"
@@ -27,5 +28,19 @@ export interface SendVerificationMailOptions {
   name: string;
   email: string;
   verificationOTP : string;
+}
+
+export interface SendIndividualConfirmationMail {
+  name: string;
+  eventname : string;
+  email : string;
+}
+
+export interface SendTeamConfirmationMail {
+  name: string;
+  eventname : string;
+  email : string;
+  teamname : string;
+  members : User[];
 }
 

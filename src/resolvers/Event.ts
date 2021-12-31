@@ -142,6 +142,7 @@ export class EventResolver {
     if (!event.registrationfee || Number(event.registrationfee) === 0) {
       event.registeredUsers.push(user);
       await event.save();
+      await User.sendConfirmationMail({name : user.name,eventname : event.name,email : user.email})
       return { registered: !!event };
     } else {
       /* Create the order id */
@@ -212,7 +213,7 @@ export class EventResolver {
       });
       event.registeredUsers.push(user);
       await event.save();
-
+      await User.sendConfirmationMail({name : user.name,eventname : event.name,email : user.email})
       return !!event;
     } catch (e) {
       throw new Error(e);
@@ -269,7 +270,7 @@ export class EventResolver {
 
               registeredTeam.members.map((member) => {
                   const { name, email, shaastraID, mobile , college, department } = member;
-                  csvData += `,"${name}","${email}","${shaastraID}","${mobile}","${college}","${department}`;
+                  csvData += `,"${name}","${email}","${shaastraID}","${mobile}","${college}","${department}"`;
               })
           })
           csv = csvData;
