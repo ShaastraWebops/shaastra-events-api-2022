@@ -258,7 +258,7 @@ export class EventResolver {
       } else {
           const registeredTeams = await Team.find({ where: { event }, relations: ["members"], select: ["name"] })
           let csvData = '"team name"';
-          const csvHeading = ',"name","email","shaastraID","mobile,"college","department"';
+          const csvHeading = ',"name","email","shaastraID","mobile","college","department"';
           for (let i = 0; i < event.teamSize; i++) {
               csvData += csvHeading;
           }
@@ -269,8 +269,9 @@ export class EventResolver {
 
               registeredTeam.members.map((member) => {
                   const { name, email, shaastraID, mobile , college, department } = member;
-                  csvData += `, "${name}","${email}","${shaastraID}","${mobile}","${college}","${department}`;
+                  csvData += `"${name}","${email}","${shaastraID}","${mobile}","${college}","${department}`;
               })
+              csvData += '\n'
           })
           csv = csvData;
       }
