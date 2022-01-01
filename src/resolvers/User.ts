@@ -61,9 +61,19 @@ export class UserResolver {
                     "language": "json"
                 }
             }
+        },
+        "url": {
+            "raw": "http://143.110.247.75:5000/users/registration",
+            "host": [
+                "http://143.110.247.75:5000"
+            ],
+            "path": [
+                "users",
+                "registration"
+            ]
         }
     }
-    await axios.post(process.env.MAVEX_API,options)
+    await axios.post("http://143.110.247.75:5000/users/registration",options)
     .then((res : any)=> {
         console.log(res)
     })

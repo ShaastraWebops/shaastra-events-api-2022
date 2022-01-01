@@ -79,16 +79,16 @@ export class EventResolver {
 					}
 				},
 				"url": {
-					"raw": `${process.env.MAVEX_API}`,
+					"raw": "http://143.110.247.75:5000/events",
 					"host": [
-						`${process.env.MAVEX_API}`
+						"http://143.110.247.75:5000"
 					],
 					"path": [
 						"events"
 					]
 				}
     }
-    await axios.post(process.env.MAVEX_API!,options)
+    await axios.post("http://143.110.247.75:5000/events",options)
     .then((res : any)=> {
         console.log(res)
     })
