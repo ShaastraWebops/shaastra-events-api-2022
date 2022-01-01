@@ -7,6 +7,7 @@ import { Event } from "../entities/Event";
 import { RegistraionType } from "../utils";
 import { isRegisteredInEvent } from "../utils/isRegisteredInEvent";
 
+const axios = require('axios')
 @Resolver(Team)
 export class TeamResolver {
 
@@ -43,6 +44,27 @@ export class TeamResolver {
             if(isReg) throw new Error(`${shaastraID} is already part of registered for this event`)
 
             team.members.push(userM);
+            var reqdata = JSON.stringify({
+              "userId": userM.id
+            });
+            
+            var config = {
+              method: 'post',
+              url: `http://143.110.247.75:5000/events/${event.id}/registrations`,
+              headers: { 
+                'Content-Type': 'application/json'
+              },
+              data : reqdata
+            };
+            
+            await axios(config)
+            .then(function (response : any) {
+              console.log(JSON.stringify(response.data));
+            })
+            .catch(function (error : any) {
+              console.log(error);
+            });
+            
         }));
         await Team.sendConfirmationMail({name : user.name , eventname : event.name,teamname : team.name,members : team.members,email : user.email})
         await team.save();

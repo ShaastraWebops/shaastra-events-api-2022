@@ -50,35 +50,31 @@ export class UserResolver {
     async verifyUser(@Arg("otp") otp: string,@Ctx() {user} : MyContext) {
       if (user?.verificationOTP !== otp) throw new Error("Invalid OTP!");
       await User.update(user.id, { isVerified: true });
-      const options = {
-        "method": "POST",
-        "header": [],
-        "body": {
-            "mode": "raw",
-            "raw": `{\r\n    \"name\": \"${user.name}\",\r\n    \"email\": \"${user.email}\",\r\n    \"password\": \"${user.password}\"\r\n}`,
-            "options": {
-                "raw": {
-                    "language": "json"
-                }
-            }
+    
+      var data = JSON.stringify({
+        "id": user.id,
+        "name": user.name,
+        "email": user.email,
+        "password": user.password
+      });
+      
+      var config = {
+        method: 'post',
+        url: 'http://143.110.247.75:5000/users/registration',
+        headers: { 
+          'Content-Type': 'application/json'
         },
-        "url": {
-            "raw": "http://143.110.247.75:5000/users/registration",
-            "host": [
-                "http://143.110.247.75:5000"
-            ],
-            "path": [
-                "users",
-                "registration"
-            ]
-        }
-    }
-    await axios.post("http://143.110.247.75:5000/users/registration",options)
-    .then((res : any)=> {
-        console.log(res)
-    })
-    .catch((err : any) => console.log(err))
-
+        data : data
+      };
+      
+      await axios(config)
+      .then(function (response : any) {
+        console.log(JSON.stringify(response.data));
+      })
+      .catch(function (error : any) {
+        console.log(error);
+      });
+    
       return !!user;
     }
 

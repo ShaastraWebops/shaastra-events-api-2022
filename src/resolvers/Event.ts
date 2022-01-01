@@ -1,5 +1,5 @@
 import { Event } from "../entities/Event";
-import { AddEventInput, AddTimingsInput, EditEventInput} from "../inputs/Event";
+import { AddEventInput, AddTimingsInput, EditEventInput } from "../inputs/Event";
 import {
   Arg,
   Authorized,
@@ -25,10 +25,10 @@ import { UpdateEventPayInput } from "../inputs/EventPay";
 import { parse } from "json2csv";
 import { getRepository } from "typeorm";
 import { Timeline } from "../entities/Timeline";
-import axios from "axios";
 import dotenv from "dotenv";
 
 dotenv.config();
+const axios = require('axios')
 
 var instance = new Razorpay({
   key_id: process.env.RAZORPAY_ID!,
@@ -59,53 +59,41 @@ export class EventResolver {
   @Mutation(() => Event)
   async addEvent(@Arg("data") data: AddEventInput) {
     const event = await Event.create({ ...data }).save();
-    const options = {
-      "method": "POST",
-				"header": [
-					{
-						"key": "token",
-						"value": `${process.env.MAVEX_ADMIN_TOKEN}`,
-						"type": "text",
-						"disabled": true
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": `{\r\n    \"bulk\": false,\r\n    \"name\": \"${event.name}\",\r\n    \"description\": \"${event.description}\"\r\n}`,
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "http://143.110.247.75:5000/events",
-					"host": [
-						"http://143.110.247.75:5000"
-					],
-					"path": [
-						"events"
-					]
-				}
-    }
-    await axios.post("http://143.110.247.75:5000/events",options)
-    .then((res : any)=> {
-        console.log(res)
+    var reqdata = JSON.stringify({
+      "id": event.id,
+      "name": event.name,
+      "description": event.description
+    });
+    
+    var config = {
+      method: 'post',
+      url: 'http://143.110.247.75:5000/events',
+      headers: { 
+        'Content-Type': 'application/json'
+      },
+      data : reqdata
+    };
+    
+    await axios(config)
+    .then(function (response : any) {
+      console.log(JSON.stringify(response.data));
     })
-    .catch((err : any) => console.log(err))
+    .catch(function (error : any) {
+      console.log(error);
+    });
     return event;
   }
 
   @Authorized(["ADMIN"])
   @Mutation(() => Boolean)
-  async addTimings(@Arg("data") data : AddTimingsInput , @Arg("id") id : string ) {
-    const event = await Event.findOne(id,{relations : ['timings']});
-   
+  async addTimings(@Arg("data") data: AddTimingsInput, @Arg("id") id: string) {
+    const event = await Event.findOne(id, { relations: ['timings'] });
+
     const timeline = new Timeline();
     timeline.name = data.name;
     timeline.time = data.time;
     await timeline.save();
-    if(event?.timings.length === 0) {
+    if (event?.timings.length === 0) {
       event.timings = []
     }
     event?.timings.push(timeline);
@@ -116,8 +104,8 @@ export class EventResolver {
 
   @Authorized(["ADMIN"])
   @Mutation(() => Boolean)
-  async deleteTimings(@Arg("id") id : string ) {
-    console.log("id",id)
+  async deleteTimings(@Arg("id") id: string) {
+    console.log("id", id)
     const { affected } = await Timeline.delete(id);
     return !!affected;
   }
@@ -136,11 +124,11 @@ export class EventResolver {
   @Mutation(() => Boolean)
   async earlybidoffer(
     @Arg("eventID") id: string,
-    @Arg("amount") amount : string
+    @Arg("amount") amount: string
   ) {
-    const {affected} = await Event.update(id, {earlybidoffer : amount})
+    const { affected } = await Event.update(id, { earlybidoffer: amount })
 
-    return affected === 1 ;
+    return affected === 1;
 
   }
 
@@ -157,30 +145,52 @@ export class EventResolver {
     const event = await Event.findOneOrFail(id, {
       relations: ["registeredUsers"],
     });
-    if(id === "ckxljoxqa00639bp7gu9o1sz9" && event.registeredUsers.length >= 150){
+    if (id === "ckxljoxqa00639bp7gu9o1sz9" && event.registeredUsers.length >= 150) {
       throw new Error("Maximum registrations reached")
     }
-    if(event.registrationOpenTime && event.registrationCloseTime){
-    const startDate = new Date(event.registrationOpenTime);
-    const currentDate = new Date();
-    const endDate = new Date(event.registrationCloseTime);
-    if (currentDate.getTime() <= startDate.getTime())
-      throw new Error("Registration is not opened yet");
-    if (currentDate.getTime() >= endDate.getTime())
-      throw new Error("Registration Closed");
-    if (event.registrationType === RegistraionType.TEAM)
-      throw new Error("Not allowed for individual registration");
+    if (event.registrationOpenTime && event.registrationCloseTime) {
+      const startDate = new Date(event.registrationOpenTime);
+      const currentDate = new Date();
+      const endDate = new Date(event.registrationCloseTime);
+      if (currentDate.getTime() <= startDate.getTime())
+        throw new Error("Registration is not opened yet");
+      if (currentDate.getTime() >= endDate.getTime())
+        throw new Error("Registration Closed");
+      if (event.registrationType === RegistraionType.TEAM)
+        throw new Error("Not allowed for individual registration");
     }
     if (!user) throw new Error("Login to Register");
     if (event.registrationType === RegistraionType.NONE)
-    throw new Error("Registration for this event is not required");
+      throw new Error("Registration for this event is not required");
 
     const userF = event.registeredUsers.filter((useR) => useR.id === user.id);
     if (userF.length === 1) throw new Error("User registered already");
     if (!event.registrationfee || Number(event.registrationfee) === 0) {
       event.registeredUsers.push(user);
       await event.save();
-      await User.sendConfirmationMail({name : user.name,eventname : event.name,email : user.email})
+      await User.sendConfirmationMail({ name: user.name, eventname: event.name, email: user.email })
+      var data = JSON.stringify({
+        "userId": user.id
+      });
+      
+      var config = {
+        method: 'post',
+        url: `http://143.110.247.75:5000/events/${event.id}/registrations`,
+        headers: { 
+          'Content-Type': 'application/json'
+        },
+        data : data
+      };
+      
+      await axios(config)
+      .then(function (response : any) {
+        console.log(JSON.stringify(response.data));
+      })
+      .catch(function (error : any) {
+        console.log(error);
+      });
+      
+      
       return { registered: !!event };
     } else {
       /* Create the order id */
@@ -195,7 +205,7 @@ export class EventResolver {
         receipt: user.shaastraID + "_" + event.name.slice(0, 24),
       };
 
-      if(event.earlybidoffer && (deadline.getTime() - currentdate.getTime()) > 0){
+      if (event.earlybidoffer && (deadline.getTime() - currentdate.getTime()) > 0) {
         options.amount = Number(event.earlybidoffer) * 100
       }
 
@@ -251,7 +261,29 @@ export class EventResolver {
       });
       event.registeredUsers.push(user);
       await event.save();
-      await User.sendConfirmationMail({name : user.name,eventname : event.name,email : user.email})
+      await User.sendConfirmationMail({ name: user.name, eventname: event.name, email: user.email })
+      var reqdata = JSON.stringify({
+        "userId": user.id
+      });
+      
+      var config = {
+        method: 'post',
+        url: `http://143.110.247.75:5000/events/${event.id}/registrations`,
+        headers: { 
+          'Content-Type': 'application/json'
+        },
+        data : reqdata
+      };
+      
+      await axios(config)
+      .then(function (response : any) {
+        console.log(JSON.stringify(response.data));
+      })
+      .catch(function (error : any) {
+        console.log(error);
+      });
+      
+
       return !!event;
     } catch (e) {
       throw new Error(e);
@@ -281,47 +313,47 @@ export class EventResolver {
   @Authorized(["ADMIN"])
   @Query(() => String)
   async exportCSV(@Arg("EventID") id: string) {
-      const event = await Event.findOneOrFail(id);
-      
-      const eventRepository = getRepository(Event);
+    const event = await Event.findOneOrFail(id);
 
-      let csv;
-      if(event.registrationType === RegistraionType.INDIVIDUAL) {
-          const registeredUsers = await eventRepository.createQueryBuilder("event")
-          .where("event.id = :eventId", { eventId: id })
-          .leftJoinAndSelect("event.registeredUsers", "user")
-          .select(["user.name", "user.email", "user.shaastraID", "user.mobile", "user.college","user.department"])
-          .execute();
+    const eventRepository = getRepository(Event);
 
-          csv =  parse(registeredUsers);
-      } else {
-          const registeredTeams = await Team.find({ where: { event }, relations: ["members"], select: ["name"] })
-          let csvData = '"team name"';
-          const csvHeading = ',"name","email","shaastraID","mobile","college","department"';
-          for (let i = 0; i < event.teamSize; i++) {
-              csvData += csvHeading;
-          }
+    let csv;
+    if (event.registrationType === RegistraionType.INDIVIDUAL) {
+      const registeredUsers = await eventRepository.createQueryBuilder("event")
+        .where("event.id = :eventId", { eventId: id })
+        .leftJoinAndSelect("event.registeredUsers", "user")
+        .select(["user.name", "user.email", "user.shaastraID", "user.mobile", "user.college", "user.department"])
+        .execute();
 
-          registeredTeams.map((registeredTeam) => {
-
-              csvData += `\n"${registeredTeam.name}"`;
-
-              registeredTeam.members.map((member) => {
-                  const { name, email, shaastraID, mobile , college, department } = member;
-                  csvData += `,"${name}","${email}","${shaastraID}","${mobile}","${college}","${department}"`;
-              })
-          })
-          csv = csvData;
+      csv = parse(registeredUsers);
+    } else {
+      const registeredTeams = await Team.find({ where: { event }, relations: ["members"], select: ["name"] })
+      let csvData = '"team name"';
+      const csvHeading = ',"name","email","shaastraID","mobile","college","department"';
+      for (let i = 0; i < event.teamSize; i++) {
+        csvData += csvHeading;
       }
 
-      return csv
+      registeredTeams.map((registeredTeam) => {
+
+        csvData += `\n"${registeredTeam.name}"`;
+
+        registeredTeam.members.map((member) => {
+          const { name, email, shaastraID, mobile, college, department } = member;
+          csvData += `,"${name}","${email}","${shaastraID}","${mobile}","${college}","${department}"`;
+        })
+      })
+      csv = csvData;
+    }
+
+    return csv
   }
 
   @Authorized(['ADMIN'])
-  @Query(()=> Number)
- async getPaidUsersCount(){
-  return await EventPay.count({where : {isPaid : true}});
- }
+  @Query(() => Number)
+  async getPaidUsersCount() {
+    return await EventPay.count({ where: { isPaid: true } });
+  }
 
   @Authorized(["ADMIN"])
   @FieldResolver(() => [User])
