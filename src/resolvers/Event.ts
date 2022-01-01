@@ -64,7 +64,7 @@ export class EventResolver {
 				"header": [
 					{
 						"key": "token",
-						"value": "{{adminToken}}",
+						"value": `${process.env.MAVEX_ADMIN_TOKEN}`,
 						"type": "text",
 						"disabled": true
 					}
