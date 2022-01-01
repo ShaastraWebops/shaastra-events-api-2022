@@ -25,6 +25,10 @@ import { UpdateEventPayInput } from "../inputs/EventPay";
 import { parse } from "json2csv";
 import { getRepository } from "typeorm";
 import { Timeline } from "../entities/Timeline";
+import axios from "axios";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 var instance = new Razorpay({
   key_id: process.env.RAZORPAY_ID!,
@@ -55,6 +59,40 @@ export class EventResolver {
   @Mutation(() => Event)
   async addEvent(@Arg("data") data: AddEventInput) {
     const event = await Event.create({ ...data }).save();
+    const options = {
+      "method": "POST",
+				"header": [
+					{
+						"key": "token",
+						"value": "{{adminToken}}",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": `{\r\n    \"bulk\": false,\r\n    \"name\": \"${event.name}\",\r\n    \"description\": \"${event.description}\"\r\n}`,
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": `${process.env.MAVEX_API}`,
+					"host": [
+						`${process.env.MAVEX_API}`
+					],
+					"path": [
+						"events"
+					]
+				}
+    }
+    await axios.post(process.env.MAVEX_API!,options)
+    .then((res : any)=> {
+        console.log(res)
+    })
+    .catch((err : any) => console.log(err))
     return event;
   }
 

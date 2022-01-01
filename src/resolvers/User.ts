@@ -8,7 +8,10 @@ import { ADMINMAILLIST, UserRole } from "../utils";
 import { Event } from "../entities/Event";
 import { Team } from "../entities/Team";
 import { parse } from "json2csv";
+import dotenv from "dotenv";
 
+dotenv.config();
+const axios = require('axios')
 
 
 @ObjectType("GetUsersOutput")
@@ -39,7 +42,7 @@ export class UserResolver {
         }
         let token = jwt.sign({ id: user.id }, process.env.JWT_SECRET || "secret");
         res.cookie("token", token )
-
+        
         return !!user;
     }
 
@@ -47,6 +50,25 @@ export class UserResolver {
     async verifyUser(@Arg("otp") otp: string,@Ctx() {user} : MyContext) {
       if (user?.verificationOTP !== otp) throw new Error("Invalid OTP!");
       await User.update(user.id, { isVerified: true });
+      const options = {
+        "method": "POST",
+        "header": [],
+        "body": {
+            "mode": "raw",
+            "raw": `{\r\n    \"name\": \"${user.name}\",\r\n    \"email\": \"${user.email}\",\r\n    \"password\": \"${user.password}\"\r\n}`,
+            "options": {
+                "raw": {
+                    "language": "json"
+                }
+            }
+        }
+    }
+    await axios.post(process.env.MAVEX_API,options)
+    .then((res : any)=> {
+        console.log(res)
+    })
+    .catch((err : any) => console.log(err))
+
       return !!user;
     }
 
