@@ -355,7 +355,7 @@ export class EventResolver {
       };
     } else if (combo === "Electronic Combo") {
       combodetails = {
-        fee: 1300,
+        fee: 1200,
         events: [
           "ckxepp6pj00182bp7h5790jnr",
           "ckxbr05w00004c9p74mji2rgd",
@@ -370,7 +370,7 @@ export class EventResolver {
     } else if (combo === "Mayhem Combo") {
       if (workshopsID.length !== 2) throw new Error("Invalid Registrations");
       combodetails = {
-        fee: 1150,
+        fee: 1049,
         events: workshopsID,
         shirts: true,
       };
