@@ -1,5 +1,10 @@
 import { Event } from "../entities/Event";
-import { AddEventInput, AddTimingsInput, EditEventInput } from "../inputs/Event";
+import {
+  AddEventInput,
+  AddTimingsInput,
+  EditEventInput,
+  TShirtsDetails,
+} from "../inputs/Event";
 import {
   Arg,
   Authorized,
@@ -25,10 +30,11 @@ import { parse } from "json2csv";
 import { getRepository } from "typeorm";
 import { Timeline } from "../entities/Timeline";
 import dotenv from "dotenv";
-import crypto from 'crypto';
+import crypto from "crypto";
+import { TShirt } from "../entities/TShirts";
 
 dotenv.config();
-const axios = require('axios')
+const axios = require("axios");
 
 var instance = new Razorpay({
   key_id: process.env.RAZORPAY_ID!,
@@ -60,41 +66,41 @@ export class EventResolver {
   async addEvent(@Arg("data") data: AddEventInput) {
     const event = await Event.create({ ...data }).save();
     var reqdata = JSON.stringify({
-      "id": event.id,
-      "name": event.name,
-      "description": event.description
+      id: event.id,
+      name: event.name,
+      description: event.description,
     });
-    
+
     var config = {
-      method: 'post',
-      url: 'http://143.110.247.75:5000/events',
-      headers: { 
-        'Content-Type': 'application/json'
+      method: "post",
+      url: "http://143.110.247.75:5000/events",
+      headers: {
+        "Content-Type": "application/json",
       },
-      data : reqdata
+      data: reqdata,
     };
-    
+
     await axios(config)
-    .then(function (response : any) {
-      console.log(JSON.stringify(response.data));
-    })
-    .catch(function (error : any) {
-      console.log(error);
-    });
+      .then(function (response: any) {
+        console.log(JSON.stringify(response.data));
+      })
+      .catch(function (error: any) {
+        console.log(error);
+      });
     return event;
   }
 
   @Authorized(["ADMIN"])
   @Mutation(() => Boolean)
   async addTimings(@Arg("data") data: AddTimingsInput, @Arg("id") id: string) {
-    const event = await Event.findOne(id, { relations: ['timings'] });
+    const event = await Event.findOne(id, { relations: ["timings"] });
 
     const timeline = new Timeline();
     timeline.name = data.name;
     timeline.time = data.time;
     await timeline.save();
     if (event?.timings.length === 0) {
-      event.timings = []
+      event.timings = [];
     }
     event?.timings.push(timeline);
     await event?.save();
@@ -105,7 +111,7 @@ export class EventResolver {
   @Authorized(["ADMIN"])
   @Mutation(() => Boolean)
   async deleteTimings(@Arg("id") id: string) {
-    console.log("id", id)
+    console.log("id", id);
     const { affected } = await Timeline.delete(id);
     return !!affected;
   }
@@ -126,10 +132,9 @@ export class EventResolver {
     @Arg("eventID") id: string,
     @Arg("amount") amount: string
   ) {
-    const { affected } = await Event.update(id, { earlybidoffer: amount })
+    const { affected } = await Event.update(id, { earlybidoffer: amount });
 
     return affected === 1;
-
   }
 
   @Authorized(["ADMIN"])
@@ -145,8 +150,11 @@ export class EventResolver {
     const event = await Event.findOneOrFail(id, {
       relations: ["registeredUsers"],
     });
-    if (id === "ckxljoxqa00639bp7gu9o1sz9" && event.registeredUsers.length >= 150) {
-      throw new Error("Maximum registrations reached")
+    if (
+      id === "ckxljoxqa00639bp7gu9o1sz9" &&
+      event.registeredUsers.length >= 150
+    ) {
+      throw new Error("Maximum registrations reached");
     }
     if (event.registrationOpenTime && event.registrationCloseTime) {
       const startDate = new Date(event.registrationOpenTime);
@@ -168,29 +176,32 @@ export class EventResolver {
     if (!event.registrationfee || Number(event.registrationfee) === 0) {
       event.registeredUsers.push(user);
       await event.save();
-      await User.sendConfirmationMail({ name: user.name, eventname: event.name, email: user.email })
+      await User.sendConfirmationMail({
+        name: user.name,
+        eventname: event.name,
+        email: user.email,
+      });
       var data = JSON.stringify({
-        "userId": user.id
+        userId: user.id,
       });
-      
+
       var config = {
-        method: 'post',
+        method: "post",
         url: `http://143.110.247.75:5000/events/${event.id}/registrations`,
-        headers: { 
-          'Content-Type': 'application/json'
+        headers: {
+          "Content-Type": "application/json",
         },
-        data : data
+        data: data,
       };
-      
+
       await axios(config)
-      .then(function (response : any) {
-        console.log(JSON.stringify(response.data));
-      })
-      .catch(function (error : any) {
-        console.log(error);
-      });
-      
-      
+        .then(function (response: any) {
+          console.log(JSON.stringify(response.data));
+        })
+        .catch(function (error: any) {
+          console.log(error);
+        });
+
       return { registered: !!event };
     } else {
       /* Create the order id */
@@ -205,8 +216,11 @@ export class EventResolver {
         receipt: user.shaastraID + "_" + event.name.slice(0, 24),
       };
 
-      if (event.earlybidoffer && (deadline.getTime() - currentdate.getTime()) > 0) {
-        options.amount = Number(event.earlybidoffer) * 100
+      if (
+        event.earlybidoffer &&
+        deadline.getTime() - currentdate.getTime() > 0
+      ) {
+        options.amount = Number(event.earlybidoffer) * 100;
       }
 
       await instance.orders.create(options, function (err: any, order: any) {
@@ -261,28 +275,31 @@ export class EventResolver {
       });
       event.registeredUsers.push(user);
       await event.save();
-      await User.sendConfirmationMail({ name: user.name, eventname: event.name, email: user.email })
+      await User.sendConfirmationMail({
+        name: user.name,
+        eventname: event.name,
+        email: user.email,
+      });
       var reqdata = JSON.stringify({
-        "userId": user.id
+        userId: user.id,
       });
-      
+
       var config = {
-        method: 'post',
+        method: "post",
         url: `http://143.110.247.75:5000/events/${event.id}/registrations`,
-        headers: { 
-          'Content-Type': 'application/json'
+        headers: {
+          "Content-Type": "application/json",
         },
-        data : reqdata
+        data: reqdata,
       };
-      
+
       await axios(config)
-      .then(function (response : any) {
-        console.log(JSON.stringify(response.data));
-      })
-      .catch(function (error : any) {
-        console.log(error);
-      });
-      
+        .then(function (response: any) {
+          console.log(JSON.stringify(response.data));
+        })
+        .catch(function (error: any) {
+          console.log(error);
+        });
 
       return !!event;
     } catch (e) {
@@ -292,89 +309,138 @@ export class EventResolver {
 
   @Authorized()
   @Mutation(() => RegisterOutput)
-  async ComboOffer(@Arg("combo") combo: string, @Ctx() { user }: MyContext) {
-   
+  async ComboOffer(
+    @Arg("combo") combo: string,
+    @Ctx() { user }: MyContext,
+    @Arg("workshopsIDs", () => [String], { nullable: true })
+    workshopsID: string[],
+    @Arg("TShirtsDetails") tShirtsDetails: TShirtsDetails
+  ) {
     var combodetails;
-    if(combo === "AI Combo"){
+    if (combo === "AI Combo") {
       combodetails = {
-        fee : 1300,
-        events : ['ckxentwt1000w1up7gi013e4e','ckxekc92m000c1up72t0h4h45','ckxen074m000p1up7bo0q5l17']
-        
-      }
-    }else if(combo === "Robotics Combo"){
+        fee: 1300,
+        events: [
+          "ckxentwt1000w1up7gi013e4e",
+          "ckxekc92m000c1up72t0h4h45",
+          "ckxen074m000p1up7bo0q5l17",
+        ],
+      };
+    } else if (combo === "Robotics Combo") {
       combodetails = {
-        fee : 1300,
-        events : ['ckxemw5oi000o2bp77xtg9v0f','ckxf1ihnv003ccup7d2bn7a67','ckxezxg8v0030dbp7e8xq13uw']
-      }
-    }else if(combo === "Data Science Combo"){
+        fee: 1300,
+        events: [
+          "ckxemw5oi000o2bp77xtg9v0f",
+          "ckxf1ihnv003ccup7d2bn7a67",
+          "ckxezxg8v0030dbp7e8xq13uw",
+        ],
+      };
+    } else if (combo === "Data Science Combo") {
       combodetails = {
-        fee : 1200,
-        events : ['ckxepglch00122bp7gjk52d0i','ckxenjobj000u1up75tsph890','ckxf22vta003kcup79stiedlw']
-      }
-    }else if(combo === "Cybermatic Combo"){
+        fee: 1200,
+        events: [
+          "ckxepglch00122bp7gjk52d0i",
+          "ckxenjobj000u1up75tsph890",
+          "ckxf22vta003kcup79stiedlw",
+        ],
+      };
+    } else if (combo === "Cybermatic Combo") {
       combodetails = {
-        fee : 1200,
-        events : ['ckxexs6fl002fcup7hcrld72v','ckxey7kfz0029dbp70sqbcovb','ckxewph1e001hcup72ls1hrjx']
-      }
-    }else if(combo === "Electronic Combo"){
+        fee: 1200,
+        events: [
+          "ckxexs6fl002fcup7hcrld72v",
+          "ckxey7kfz0029dbp70sqbcovb",
+          "ckxewph1e001hcup72ls1hrjx",
+        ],
+      };
+    } else if (combo === "Electronic Combo") {
       combodetails = {
-        fee : 1300,
-        events : ['ckxepp6pj00182bp7h5790jnr','ckxbr05w00004c9p74mji2rgd','ckxen40g6000q2bp7924y6qrm']
-      }
-    }else if(combo === "Management Workshops"){
+        fee: 1300,
+        events: [
+          "ckxepp6pj00182bp7h5790jnr",
+          "ckxbr05w00004c9p74mji2rgd",
+          "ckxen40g6000q2bp7924y6qrm",
+        ],
+      };
+    } else if (combo === "Management Workshops") {
       combodetails = {
-        fee : 800,
-        events : ['ckxnilxyt000j0bp7d9gp9a7e','ckxevm6oi000gcup70lp17fa1']
-      }
+        fee: 800,
+        events: ["ckxnilxyt000j0bp7d9gp9a7e", "ckxevm6oi000gcup70lp17fa1"],
+      };
+    } else if (combo === "Mayhem Combo") {
+      if (workshopsID.length !== 2) throw new Error("Invalid Registrations");
+      combodetails = {
+        fee: 1150,
+        events: workshopsID,
+        shirts: true,
+      };
     }
     if (!user) throw new Error("Login to Register");
-   var flag = 0 ;
-     await Promise.all(combodetails?.events.map(async (eve) => {
-        const event = await Event.findOne(eve , {relations: ["registeredUsers"]})
-        const userF = event?.registeredUsers.filter((useR) => useR.id === user.id);
-        if(userF?.length === 1) {
+    var flag = 0;
+    await Promise.all(
+      combodetails?.events.map(async (eve) => {
+        const event = await Event.findOne(eve, {
+          relations: ["registeredUsers"],
+        });
+        const userF = event?.registeredUsers.filter(
+          (useR) => useR.id === user.id
+        );
+        if (userF?.length === 1) {
           flag = 1;
         }
-    })!)
-  if(flag){
-    throw new Error("User Already registered in one of the workshop");
-  }
-    const fee = combodetails?.fee! *100;
-      /* Create the order id */
-      let orderId: string = "";
-     
-      var options = {
-        amount: combodetails?.fee! * 100,
-        currency: "INR",
-        receipt: user.shaastraID + combo ,
-      };
+        console.log("Error Here");
+      })!
+    );
+    if (flag) {
+      throw new Error("User Already registered in one of the workshop");
+    }
+    const fee = combodetails?.fee! * 100;
+    /* Create the order id */
+    let orderId: string = "";
 
-      await instance.orders.create(options, function (err: any, order: any) {
-        if (err) throw new Error("Order Creation failed. Please Retry");
-        orderId = order.id;
-      });
+    var options = {
+      amount: combodetails?.fee! * 100,
+      currency: "INR",
+      receipt: user.shaastraID + combo,
+    };
 
-      if (orderId === "")
-        throw new Error("Order Creation failed. Please Retry");
+    await instance.orders.create(options, function (err: any, order: any) {
+      if (err) throw new Error("Order Creation failed. Please Retry");
+      orderId = order.id;
+    });
 
-      /* Store the details in database */
-      await Promise.all(combodetails?.events.map(async (eve) => {
-        const event = await Event.findOne(eve , {relations: ["registeredUsers"]})
+    if (orderId === "") throw new Error("Order Creation failed. Please Retry");
+
+    /* Store the details in database */
+    await Promise.all(
+      combodetails?.events.map(async (eve) => {
+        const event = await Event.findOne(eve, {
+          relations: ["registeredUsers"],
+        });
         await EventPay.create({
           orderId,
-          amount: Math.round(Number(options.amount)/3) ,
+          amount: Math.round(Number(options.amount) / 3),
           event,
           user,
         }).save();
       })!
-      )
-      return {
-        eventPay :{
-          orderId,
-          user,
-          amount : fee
-        }
-      };
+    );
+    if (combodetails?.shirts)
+      await TShirt.create({
+        name: user.name,
+        email: user.email,
+        mobile: user.mobile,
+        shaastraID: user.shaastraID,
+        orderId,
+        ...tShirtsDetails,
+      }).save();
+    return {
+      eventPay: {
+        orderId,
+        user,
+        amount: fee,
+      },
+    };
   }
 
   @Authorized()
@@ -394,56 +460,81 @@ export class EventResolver {
         throw new Error("Invalid Payment Signature");
 
       /* Update the details in database */
-      const eventpay = await EventPay.find({where : { orderId : data.orderId} , relations : ['event']})
+      const eventpay = await EventPay.find({
+        where: { orderId: data.orderId },
+        relations: ["event"],
+      });
 
+      await Promise.all(
+        eventpay.map(async (eve) => {
+          (eve.isPaid = true),
+            (eve.payementId = data.payementId),
+            (eve.paymentSignature = data.paymentSignature);
+          await eve.save();
+        })
+      ).catch(() => {
+        throw new Error("Update failed");
+      });
 
-     await Promise.all(eventpay.map(async (eve) =>{
-        eve.isPaid = true,
-        eve.payementId = data.payementId,
-        eve.paymentSignature = data.paymentSignature
-        await eve.save();
-
-      })).catch(()=> {throw new Error("Update failed") })
-      
+      const tShirtOrderCount = await TShirt.count({
+        where: { orderId: data.orderId },
+      });
+      if (tShirtOrderCount === 1) {
+        const tShirtOrder = await TShirt.findOne({
+          where: { orderId: data.orderId },
+        });
+        tShirtOrder!.payementId = data.payementId;
+        tShirtOrder!.paymentSignature = data.paymentSignature;
+        tShirtOrder!.isPaid = true;
+        await tShirtOrder?.save();
+        await User.sendConfirmationMail({
+          name: user.name,
+          eventname: "t-shirt",
+          email: user.email,
+        });
+      }
 
       /* Update the user details in registered users */
-     await Promise.all(
-      eventpay.map(async(eve) =>{
-        const event = await Event.findOneOrFail(eve.event.id, {
-          relations: ["registeredUsers"],
-        });
-        event.registeredUsers.push(user);
-        await event.save();
-        await User.sendConfirmationMail({ name: user.name, eventname: event.name, email: user.email })
-        var reqdata = JSON.stringify({
-          "userId": user.id
-        });
-        
-        var config = {
-          method: 'post',
-          url: `http://143.110.247.75:5000/events/${event.id}/registrations`,
-          headers: { 
-            'Content-Type': 'application/json'
-          },
-          data : reqdata
-        };
-        
-        await axios(config)
-        .then(function (response : any) {
-          console.log(JSON.stringify(response.data));
+      await Promise.all(
+        eventpay.map(async (eve) => {
+          const event = await Event.findOneOrFail(eve.event.id, {
+            relations: ["registeredUsers"],
+          });
+          event.registeredUsers.push(user);
+          await event.save();
+          await User.sendConfirmationMail({
+            name: user.name,
+            eventname: event.name,
+            email: user.email,
+          });
+          var reqdata = JSON.stringify({
+            userId: user.id,
+          });
+
+          var config = {
+            method: "post",
+            url: `http://143.110.247.75:5000/events/${event.id}/registrations`,
+            headers: {
+              "Content-Type": "application/json",
+            },
+            data: reqdata,
+          };
+
+          await axios(config)
+            .then(function (response: any) {
+              console.log(JSON.stringify(response.data));
+            })
+            .catch(function (error: any) {
+              console.log(error);
+            });
         })
-        .catch(function (error : any) {
-          console.log(error);
-        });
-              })
-     )
-     return true;
- 
+      );
+      return true;
     } catch (e) {
       throw new Error(e);
     }
   }
-  
+
   @Query(() => GetEventsOutput)
   async getEvents(
     @Arg("filter", { nullable: true }) vertical: Vertical,
@@ -473,41 +564,50 @@ export class EventResolver {
 
     let csv;
     if (event.registrationType === RegistraionType.INDIVIDUAL) {
-      const registeredUsers = await eventRepository.createQueryBuilder("event")
+      const registeredUsers = await eventRepository
+        .createQueryBuilder("event")
         .where("event.id = :eventId", { eventId: id })
         .leftJoinAndSelect("event.registeredUsers", "user")
-        .select(["user.name", "user.email", "user.shaastraID", "user.mobile", "user.college", "user.department"])
+        .select([
+          "user.name",
+          "user.email",
+          "user.shaastraID",
+          "user.mobile",
+          "user.college",
+          "user.department",
+        ])
         .execute();
 
       csv = parse(registeredUsers);
     } else {
-      const registeredTeams = await Team.find({ where: { event }, relations: ["members"], select: ["name"] })
+      const registeredTeams = await Team.find({
+        where: { event },
+        relations: ["members"],
+        select: ["name"],
+      });
       let csvData = '"team name"';
-      const csvHeading = ',"name","email","shaastraID","mobile","college","department"';
+      const csvHeading =
+        ',"name","email","shaastraID","mobile","college","department"';
       for (let i = 0; i < event.teamSize; i++) {
         csvData += csvHeading;
       }
 
       registeredTeams.map((registeredTeam) => {
-
         csvData += `\n"${registeredTeam.name}"`;
 
         registeredTeam.members.map((member) => {
-          const { name, email, shaastraID, mobile, college, department } = member;
+          const { name, email, shaastraID, mobile, college, department } =
+            member;
           csvData += `,"${name}","${email}","${shaastraID}","${mobile}","${college}","${department}"`;
-        })
-      })
+        });
+      });
       csv = csvData;
     }
 
-    return csv
+    return csv;
   }
 
- 
-
-
-
-  @Authorized(['ADMIN'])
+  @Authorized(["ADMIN"])
   @Query(() => Number)
   async getPaidUsersCount() {
     return await EventPay.count({ where: { isPaid: true } });
@@ -588,7 +688,6 @@ export class EventResolver {
 
     return null;
   }
-
 
   @FieldResolver(() => [EventFAQ])
   async faqs(@Root() { id }: Event) {

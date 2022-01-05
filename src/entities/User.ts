@@ -1,6 +1,10 @@
 import bcrypt from "bcryptjs";
 import cuid from "cuid";
-import { SendIndividualConfirmationMail, SendVerificationMailOptions, UserRole } from "../utils";
+import {
+  SendIndividualConfirmationMail,
+  SendVerificationMailOptions,
+  UserRole,
+} from "../utils";
 import { Field, ID, ObjectType, registerEnumType } from "type-graphql";
 import {
   BaseEntity,
@@ -54,17 +58,23 @@ export class User extends BaseEntity {
     eventname,
     email,
   }: SendIndividualConfirmationMail) {
-    let body = ``
-    if(eventname === "Kick-off 2022")
-    {
+    let body = ``;
+    if (eventname === "Kick-off 2022") {
       body = `Hello <b>${name}</b>,<br><br>
       Thank you for registering for <strong>${eventname}</strong>.
-      To view the problem statement, follow the invitation link to the Kaggle contest <a href="https://www.kaggle.com/t/dab00b0531394dbcb82873db472f46aa">here</a>`
+      To view the problem statement, follow the invitation link to the Kaggle contest <a href="https://www.kaggle.com/t/dab00b0531394dbcb82873db472f46aa">here</a>`;
+    } else if (eventname === "t-shirt") {
+      body = `Hello <b>${name}</b>,<br><br>
+      Your order for  T Shirt is successful`;
+    } else {
+      body = `Hello <b>${name}</b>,<br><br>
+   Your registration for  <strong>${eventname}</strong> is successful`;
     }
-    else
-   { body = `Hello <b>${name}</b>,<br><br>
-   Your registration for  <strong>${eventname}</strong> is successful`;}
-    await mail({ email, sub: "Registration Successful |  Shaastra- 2022", body });
+    await mail({
+      email,
+      sub: "Registration Successful |  Shaastra- 2022",
+      body,
+    });
   }
 
   static primaryFields = [
@@ -165,9 +175,7 @@ export class User extends BaseEntity {
   @OneToMany(() => EventPay, (eventPay) => eventPay.user)
   eventsPay: EventPay[];
 
-  @OneToOne(() => BlitzChess, chess=> chess.user ,{nullable : true} )
+  @OneToOne(() => BlitzChess, (chess) => chess.user, { nullable: true })
   @JoinColumn()
-  chessDetails : BlitzChess
-
-
+  chessDetails: BlitzChess;
 }
