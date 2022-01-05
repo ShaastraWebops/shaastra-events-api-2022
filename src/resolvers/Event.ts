@@ -314,7 +314,7 @@ export class EventResolver {
     @Ctx() { user }: MyContext,
     @Arg("workshopsIDs", () => [String], { nullable: true })
     workshopsID: string[],
-    @Arg("TShirtsDetails") tShirtsDetails: TShirtsDetails
+    @Arg("TShirtsDetails",{ nullable : true}) tShirtsDetails?: TShirtsDetails
   ) {
     var combodetails;
     if (combo === "AI Combo") {
