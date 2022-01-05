@@ -21,7 +21,15 @@ export class Team extends BaseEntity {
       members.map((member)=>{
         memberS+= member.name + '<br>'
       })
-      const body = `Hello <b>${name}</b>,<br><br>
+      let body = ``
+      if(eventname === "Kick-off 2022")
+    {
+      body = `Hello <b>${name}</b>,<br><br>
+      Thank you for registering for <strong>${eventname}</strong>. <br> Team name : <strong>${teamname}</strong> <br>Team members : <br>` + `<strong> ${memberS} </strong> <br>
+      To view the problem statement, follow the invitation link to the Kaggle contest <a href="https://www.kaggle.com/t/dab00b0531394dbcb82873db472f46aa">here</a>`
+    }
+    else
+       body = `Hello <b>${name}</b>,<br><br>
     Your registration for  <strong>${eventname}</strong> is successful <br> Team name : <strong>${teamname}</strong>
     <br>Team members : <br>` + `<strong> ${memberS} </strong>`;
       await mail({ email, sub: "Registration Successful |  Shaastra- 2022", body });
