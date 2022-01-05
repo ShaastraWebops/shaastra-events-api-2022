@@ -54,8 +54,16 @@ export class User extends BaseEntity {
     eventname,
     email,
   }: SendIndividualConfirmationMail) {
-    const body = `Hello <b>${name}</b>,<br><br>
-   Your registration for  <strong>${eventname}</strong> is successful`;
+    let body = ``
+    if(eventname === "Kick-off 2022")
+    {
+      body = `Hello <b>${name}</b>,<br><br>
+      Thank you for registering for <strong>${eventname}</strong>.
+      To view the problem statement, follow the invitation link to the Kaggle contest <a href="https://www.kaggle.com/t/dab00b0531394dbcb82873db472f46aa">here</a>`
+    }
+    else
+   { body = `Hello <b>${name}</b>,<br><br>
+   Your registration for  <strong>${eventname}</strong> is successful`;}
     await mail({ email, sub: "Registration Successful |  Shaastra- 2022", body });
   }
 
