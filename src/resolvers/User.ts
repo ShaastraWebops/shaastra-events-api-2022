@@ -31,6 +31,8 @@ export class UserResolver {
         const count = await User.count();
         var shID = ( "00000" + (count + 1) ).slice(-5);
         const shaastraID = `SHA22${shID}`;
+        const userM = await User.findOne({where : {email : data.email}});
+        if(userM) throw new Error("User Already signed up.Please login to continue")
         const user = await User.create({ ...data, shaastraID }).save();
 
         const { name, email, verificationOTP} = user;
