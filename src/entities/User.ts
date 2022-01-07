@@ -162,6 +162,14 @@ export class User extends BaseEntity {
   @Field(() => UserRole)
   role: UserRole;
 
+  @Column({nullable : true})
+  @Field({nullable : true})
+  referralcode : string;
+
+  @Column({default : false})
+  @Field()
+  isUsedReferral : boolean ;
+
   // RELATIONS
   @OneToMany(() => Event, (event) => event.user)
   events: Event[];

@@ -183,6 +183,17 @@ export class UserResolver {
         return parse(users);
     }
 
+  @Authorized()
+  @Mutation(() => Boolean)
+  async updateReferral(
+    @Arg("referralcode") referralcode: string,
+    @Ctx() {user} : MyContext
+  ) {
+    if(user.referralcode) throw new Error("Only one referral code can be used per account");
+    const {affected} = await User.update(user.id,{referralcode : referralcode}) 
+    return affected === 1;
+  }
+
 
     @Authorized()
     @FieldResolver(() => [Event])

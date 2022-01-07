@@ -207,8 +207,8 @@ export class EventResolver {
       /* Create the order id */
       let orderId: string = "";
 
-      const currentdate = new Date();
-      const deadline = new Date("January 1,2022 23:59:59");
+      // const currentdate = new Date();
+      // const deadline = new Date("January 1,2022 23:59:59");
 
       var options = {
         amount: Number(event.registrationfee) * 100,
@@ -216,11 +216,15 @@ export class EventResolver {
         receipt: user.shaastraID + "_" + event.name.slice(0, 24),
       };
 
-      if (
-        event.earlybidoffer &&
-        deadline.getTime() - currentdate.getTime() > 0
-      ) {
-        options.amount = Number(event.earlybidoffer) * 100;
+      // if (
+      //   event.earlybidoffer &&
+      //   deadline.getTime() - currentdate.getTime() > 0
+      // ) {
+      //   options.amount = Number(event.earlybidoffer) * 100;
+      // }
+
+      if(user.referralcode && !user.isUsedReferral){
+        options.amount = Math.round(0.95* Number(event.registrationfee)) * 100
       }
 
       await instance.orders.create(options, function (err: any, order: any) {
@@ -269,6 +273,7 @@ export class EventResolver {
       );
       if (affected !== 1) throw new Error("Update failed");
 
+      
       /* Update the user details in registered users */
       const event = await Event.findOneOrFail(id, {
         relations: ["registeredUsers"],
@@ -280,9 +285,30 @@ export class EventResolver {
         eventname: event.name,
         email: user.email,
       });
-      var reqdata = JSON.stringify({
-        userId: user.id,
-      });
+      if(user.referralcode && !user.isUsedReferral){
+        await User.update(user.id,{isUsedReferral : true})
+        var reff = JSON.stringify({
+          "referalcode": user.referralcode,
+          "coursename": event.name
+        });
+
+        var refconfig = {
+          method: 'post',
+          url: 'https://sheet.best/api/sheets/f8d10436-8ee1-42ef-87ab-3e17a9c99d1c',
+          headers: { 
+            'Content-Type': 'application/json'
+          },
+          data : reff
+        };
+
+        axios(refconfig)
+        .catch(function (error : any) {
+          console.log(error);
+        });
+        }
+        var reqdata = JSON.stringify({
+          userId: user.id,
+        });
 
       var config = {
         method: "post",
@@ -394,7 +420,6 @@ export class EventResolver {
     if (flag) {
       throw new Error("User Already registered in one of the workshop");
     }
-    const fee = combodetails?.fee! * 100;
     /* Create the order id */
     let orderId: string = "";
 
@@ -404,6 +429,10 @@ export class EventResolver {
       receipt: user.shaastraID + combo,
     };
 
+    if(user.referralcode && !user.isUsedReferral){
+      options.amount = Math.round(0.95* Number(combodetails?.fee!))*100
+    }
+    
     await instance.orders.create(options, function (err: any, order: any) {
       if (err) throw new Error("Order Creation failed. Please Retry");
       orderId = order.id;
@@ -438,7 +467,7 @@ export class EventResolver {
       eventPay: {
         orderId,
         user,
-        amount: fee,
+        amount: options.amount,
       },
     };
   }
@@ -493,6 +522,28 @@ export class EventResolver {
           email: user.email,
         });
       }
+
+      if(user.referralcode && !user.isUsedReferral){
+        await User.update(user.id,{isUsedReferral : true})
+        var reff = JSON.stringify({
+          "referalcode": user.referralcode,
+          "coursename": "Combo offer"
+        });
+
+        var refconfig = {
+          method: 'post',
+          url: 'https://sheet.best/api/sheets/f8d10436-8ee1-42ef-87ab-3e17a9c99d1c',
+          headers: { 
+            'Content-Type': 'application/json'
+          },
+          data : reff
+        };
+
+        axios(refconfig)
+        .catch(function (error : any) {
+          console.log(error);
+        });
+        }
 
       /* Update the user details in registered users */
       await Promise.all(
