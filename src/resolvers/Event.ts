@@ -73,7 +73,7 @@ export class EventResolver {
 
     var config = {
       method: "post",
-      url: "http://143.110.247.75:5000/events",
+      url: "https://mavex.in/api/events/events",
       headers: {
         "Content-Type": "application/json",
       },
