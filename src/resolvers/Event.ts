@@ -17,7 +17,7 @@ import {
   Resolver,
   Root,
 } from "type-graphql";
-import { RegistraionType, Vertical } from "../utils";
+import { REFERRALCODE1, REFERRALCODE2, RegistraionType, Vertical } from "../utils";
 import { User } from "../entities/User";
 import { Team } from "../entities/Team";
 import { MyContext } from "../utils/context";
@@ -146,7 +146,7 @@ export class EventResolver {
 
   @Authorized()
   @Mutation(() => RegisterOutput)
-  async register(@Arg("EventID") id: string, @Ctx() { user }: MyContext) {
+  async register(@Arg("EventID") id: string , @Ctx() { user }: MyContext, @Arg("referral",{nullable : true}) referral?: string) {
     const event = await Event.findOneOrFail(id, {
       relations: ["registeredUsers"],
     });
@@ -187,7 +187,7 @@ export class EventResolver {
 
       var config = {
         method: "post",
-        url: `http://143.110.247.75:5000/events/${event.id}/registrations`,
+        url: `https://mavex.in/api/events/${event.id}/registrations`,
         headers: {
           "Content-Type": "application/json",
         },
@@ -222,9 +222,12 @@ export class EventResolver {
       // ) {
       //   options.amount = Number(event.earlybidoffer) * 100;
       // }
-
-      if(user.referralcode && !user.isUsedReferral){
+      if(referral && REFERRALCODE1.includes(referral)){
         options.amount = Math.round(0.95* Number(event.registrationfee)) * 100
+      }else if(referral && REFERRALCODE2.includes(referral)){
+        options.amount = Math.round(0.90* Number(event.registrationfee)) * 100
+      }else if(referral && !REFERRALCODE2.includes(referral) && !REFERRALCODE1.includes(referral)){
+        throw new Error("Referral Code not valid")
       }
 
       await instance.orders.create(options, function (err: any, order: any) {
@@ -250,7 +253,8 @@ export class EventResolver {
   async updateEventPay(
     @Arg("data") data: UpdateEventPayInput,
     @Arg("EventId") id: string,
-    @Ctx() { user }: MyContext
+    @Ctx() { user }: MyContext,
+    @Arg("referral",{nullable : true}) referral ?:string
   ) {
     try {
       /* Verify the signature */
@@ -285,10 +289,9 @@ export class EventResolver {
         eventname: event.name,
         email: user.email,
       });
-      if(user.referralcode && !user.isUsedReferral){
-        await User.update(user.id,{isUsedReferral : true})
+      if(referral){
         var reff = JSON.stringify({
-          "referalcode": user.referralcode,
+          "referalcode": referral,
           "coursename": event.name
         });
 
@@ -301,7 +304,7 @@ export class EventResolver {
           data : reff
         };
 
-        axios(refconfig)
+        await axios(refconfig)
         .catch(function (error : any) {
           console.log(error);
         });
@@ -312,7 +315,7 @@ export class EventResolver {
 
       var config = {
         method: "post",
-        url: `http://143.110.247.75:5000/events/${event.id}/registrations`,
+        url: `https://mavex.in/api/events/${event.id}/registrations`,
         headers: {
           "Content-Type": "application/json",
         },
@@ -340,7 +343,8 @@ export class EventResolver {
     @Ctx() { user }: MyContext,
     @Arg("workshopsIDs", () => [String], { nullable: true })
     workshopsID: string[],
-    @Arg("TShirtsDetails",{ nullable : true}) tShirtsDetails?: TShirtsDetails
+    @Arg("TShirtsDetails",{ nullable : true}) tShirtsDetails?: TShirtsDetails,
+    @Arg("referral",{nullable : true}) referral?: string
   ) {
     var combodetails;
     if (combo === "AI Combo") {
@@ -429,8 +433,12 @@ export class EventResolver {
       receipt: user.shaastraID + combo,
     };
 
-    if(user.referralcode && !user.isUsedReferral){
+    if(referral && REFERRALCODE1.includes(referral)){
       options.amount = Math.round(0.95* Number(combodetails?.fee!))*100
+    }else if(referral && REFERRALCODE2.includes(referral)){
+      options.amount = Math.round(0.90* Number(combodetails?.fee!))*100
+    }else if(referral && !REFERRALCODE2.includes(referral) && !REFERRALCODE1.includes(referral)){
+      throw new Error("Referral Code not valid")
     }
     
     await instance.orders.create(options, function (err: any, order: any) {
@@ -476,7 +484,8 @@ export class EventResolver {
   @Mutation(() => Boolean)
   async ComboupdateEventPay(
     @Arg("data") data: UpdateEventPayInput,
-    @Ctx() { user }: MyContext
+    @Ctx() { user }: MyContext,
+    @Arg("referral",{nullable : true}) referral ?:string
   ) {
     try {
       /* Verify the signature */
@@ -523,13 +532,11 @@ export class EventResolver {
         });
       }
 
-      if(user.referralcode && !user.isUsedReferral){
-        await User.update(user.id,{isUsedReferral : true})
+      if(referral){
         var reff = JSON.stringify({
-          "referalcode": user.referralcode,
+          "referalcode": referral,
           "coursename": "Combo offer"
         });
-
         var refconfig = {
           method: 'post',
           url: 'https://sheet.best/api/sheets/f8d10436-8ee1-42ef-87ab-3e17a9c99d1c',
@@ -539,7 +546,7 @@ export class EventResolver {
           data : reff
         };
 
-        axios(refconfig)
+        await axios(refconfig)
         .catch(function (error : any) {
           console.log(error);
         });
@@ -564,7 +571,7 @@ export class EventResolver {
 
           var config = {
             method: "post",
-            url: `http://143.110.247.75:5000/events/${event.id}/registrations`,
+            url: `https://mavex.in/api/events/${event.id}/registrations`,
             headers: {
               "Content-Type": "application/json",
             },
