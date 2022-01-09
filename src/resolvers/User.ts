@@ -62,7 +62,7 @@ export class UserResolver {
       
       var config = {
         method: 'post',
-        url: 'http://143.110.247.75:5000/users/registration',
+        url: 'https://mavex.in/api/users/registration',
         headers: { 
           'Content-Type': 'application/json'
         },

@@ -50,7 +50,7 @@ export class TeamResolver {
             
             var config = {
               method: 'post',
-              url: `http://143.110.247.75:5000/events/${event.id}/registrations`,
+              url: `https://mavex.in/api/events/${event.id}/registrations`,
               headers: { 
                 'Content-Type': 'application/json'
               },
