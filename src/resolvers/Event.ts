@@ -665,6 +665,16 @@ export class EventResolver {
   }
 
   @Authorized(["ADMIN"])
+  @Query(() => String)
+  async TShirtDetailsCSV() {
+    let csv;
+    const TshirtDeatails = await TShirt.find({where : {isPaid : true}})
+    csv = parse(TshirtDeatails);
+
+    return csv;
+  }
+
+  @Authorized(["ADMIN"])
   @FieldResolver(() => [User])
   async registeredUser(@Root() { id }: Event) {
     const event = await Event.findOneOrFail(id, {

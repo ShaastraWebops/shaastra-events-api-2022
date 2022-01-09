@@ -125,7 +125,8 @@ export class BlitzChessResolver {
     return chessDetails.user;
   }
 
-  // @Authorized(["ADMIN"])
+  
+  @Authorized(["ADMIN"])
   @Query(() => String)
   async getChessDetailsCSV() {
     const userRepository = getRepository(User);
