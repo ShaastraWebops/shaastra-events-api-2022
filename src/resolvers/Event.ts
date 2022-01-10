@@ -511,9 +511,10 @@ export class EventResolver {
 
       await Promise.all(
         eventpay.map(async (eve) => {
-          (eve.isPaid = true),
+            (eve.isPaid = true),
             (eve.payementId = data.payementId),
-            (eve.paymentSignature = data.paymentSignature);
+            (eve.paymentSignature = data.paymentSignature),
+              referral ? eve.referralcode = referral + " combo"  : null,
           await eve.save();
         })
       ).catch(() => {
