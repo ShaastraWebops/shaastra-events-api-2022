@@ -17,7 +17,7 @@ import {
   Resolver,
   Root,
 } from "type-graphql";
-import { REFERRALCODE1, REFERRALCODE2, RegistraionType, Vertical } from "../utils";
+import { ENVOYEMAILS, REFERRALCODE1, REFERRALCODE2, RegistraionType, Vertical } from "../utils";
 import { User } from "../entities/User";
 import { Team } from "../entities/Team";
 import { MyContext } from "../utils/context";
@@ -223,10 +223,13 @@ export class EventResolver {
       //   options.amount = Number(event.earlybidoffer) * 100;
       // }
       if(referral && REFERRALCODE1.includes(referral)){
-        options.amount = Math.round(0.95* Number(event.registrationfee)) * 100
-      }else if(referral && REFERRALCODE2.includes(referral)){
-        options.amount = Math.round(0.90* Number(event.registrationfee)) * 100
-      }else if(referral && !REFERRALCODE2.includes(referral) && !REFERRALCODE1.includes(referral)){
+        options.amount = Math.round(0.95* Number(event.registrationfee))*100
+      }else if(referral && REFERRALCODE2.includes(referral) && ENVOYEMAILS.includes(user.email)){
+        options.amount = Math.round(0.90* Number(event.registrationfee))*100
+      }else if(referral && REFERRALCODE2.includes(referral) && !ENVOYEMAILS.includes(user.email)){
+        options.amount = Math.round(0.95* Number(event.registrationfee))*100
+      }
+      else if(referral && !REFERRALCODE2.includes(referral) && !REFERRALCODE1.includes(referral)){
         throw new Error("Referral Code not valid")
       }
 
@@ -432,12 +435,14 @@ export class EventResolver {
       currency: "INR",
       receipt: user.shaastraID + combo,
     };
-
     if(referral && REFERRALCODE1.includes(referral)){
       options.amount = Math.round(0.95* Number(combodetails?.fee!))*100
-    }else if(referral && REFERRALCODE2.includes(referral)){
+    }else if(referral && REFERRALCODE2.includes(referral) && ENVOYEMAILS.includes(user.email)){
       options.amount = Math.round(0.90* Number(combodetails?.fee!))*100
-    }else if(referral && !REFERRALCODE2.includes(referral) && !REFERRALCODE1.includes(referral)){
+    }else if(referral && REFERRALCODE2.includes(referral) && !ENVOYEMAILS.includes(user.email)){
+      options.amount = Math.round(0.95* Number(combodetails?.fee!))*100
+    }
+    else if(referral && !REFERRALCODE2.includes(referral) && !REFERRALCODE1.includes(referral)){
       throw new Error("Referral Code not valid")
     }
     
