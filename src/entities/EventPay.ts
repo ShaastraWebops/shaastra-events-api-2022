@@ -36,6 +36,9 @@ class EventPay extends BaseEntity {
   @Field(() => Boolean)
   isPaid: Boolean;
 
+  @Column({ nullable: true })
+  @Field({ nullable: true })
+  referralcode: string;
   // Relations
   @ManyToOne(() => Event, (event) => event.eventsPay)
   @Field(() => Event)

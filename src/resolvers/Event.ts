@@ -276,6 +276,7 @@ export class EventResolver {
           payementId: data.payementId,
           paymentSignature: data.paymentSignature,
           isPaid: true,
+          referralcode : referral
         }
       );
       if (affected !== 1) throw new Error("Update failed");
