@@ -160,6 +160,7 @@ export class EventResolver {
       const startDate = new Date(event.registrationOpenTime);
       const currentDate = new Date();
       const endDate = new Date(event.registrationCloseTime);
+      endDate.setDate(endDate.getDate() + 1)
       if (currentDate.getTime() <= startDate.getTime())
         throw new Error("Registration is not opened yet");
       if (currentDate.getTime() >= endDate.getTime())
