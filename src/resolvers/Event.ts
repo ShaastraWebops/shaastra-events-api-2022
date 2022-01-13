@@ -156,7 +156,24 @@ export class EventResolver {
     ) {
       throw new Error("Maximum registrations reached");
     }
-    if ((event.registrationOpenTime && event.registrationCloseTime) || event.vertical === Vertical.WORKSHOPS) {
+    if (
+      [
+        "ckxezt6nt002udbp76oar48e5",
+        "ckxnilxyt000j0bp7d9gp9a7e",
+        "ckxepp6pj00182bp7h5790jnr",
+        "ckxen074m000p1up7bo0q5l17",
+        "ckxemw5oi000o2bp77xtg9v0f",
+        "ckxexs6fl002fcup7hcrld72v",
+        "cky6uehup00frfsp7br7sblfn",
+        "ckxekmufd000e1up7dbj361ib",
+        "ckxf22vta003kcup79stiedlw",
+      ].includes(id)
+    )
+      throw new Error("Registrations Closed");
+    if (
+      (event.registrationOpenTime && event.registrationCloseTime) ||
+      event.vertical === Vertical.WORKSHOPS
+    ) {
       // const startDate = new Date(event.registrationOpenTime);
       const currentDate = new Date();
       let endDate;
