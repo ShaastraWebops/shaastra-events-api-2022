@@ -156,13 +156,19 @@ export class EventResolver {
     ) {
       throw new Error("Maximum registrations reached");
     }
-    if (event.registrationOpenTime && event.registrationCloseTime) {
-      const startDate = new Date(event.registrationOpenTime);
+    if ((event.registrationOpenTime && event.registrationCloseTime) || event.vertical === Vertical.WORKSHOPS) {
+      // const startDate = new Date(event.registrationOpenTime);
       const currentDate = new Date();
-      const endDate = new Date(event.registrationCloseTime);
-      endDate.setDate(endDate.getDate() + 1)
-      if (currentDate.getTime() <= startDate.getTime())
-        throw new Error("Registration is not opened yet");
+      let endDate;
+      if(event.vertical === Vertical.WORKSHOPS ){
+        endDate = new Date("January 13,2022 09:59:59")
+      }else{
+        endDate = new Date(event.registrationCloseTime);
+        endDate.setDate(endDate.getDate() + 1)
+      }
+      
+      // if (currentDate.getTime() <= startDate.getTime())
+      //   throw new Error("Registration is not opened yet");
       if (currentDate.getTime() >= endDate.getTime())
         throw new Error("Registration Closed");
       if (event.registrationType === RegistraionType.TEAM)
