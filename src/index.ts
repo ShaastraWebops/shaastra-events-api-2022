@@ -36,9 +36,14 @@ const main = async () =>{
     context :  async ( { req, res } : { req: express.Request, res: express.Response } ) => {
         let user;
         if(req.headers.cookie) {
-          const token = req.headers.cookie.split("token=")[1];
+          let token = req.headers.cookie.split("token=")[1];
+          console.log(token)
+          if(token){
+            token.split(";").length > 1 ? token = token.split(";")[0] : null
+          }
           if(token){
             const decoded = jwt.verify(token, process.env.JWT_SECRET ||  "secret" ) as any;
+            console.log("decoded",decoded)
             user = await User.findByIds(decoded.id);
             user = user[0];
           }
