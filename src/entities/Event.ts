@@ -92,11 +92,11 @@ export class Event extends BaseEntity {
   @Field({ nullable: true })
   registrationCloseTime: string;
 
-  @Column("timestamptz",{ nullable: true })
+  @Column("timestamptz", { nullable: true })
   @Field({ nullable: true })
   eventTimeFrom: string;
 
-  @Column("timestamptz",{ nullable: true })
+  @Column("timestamptz", { nullable: true })
   @Field({ nullable: true })
   eventTimeTo: string;
 
@@ -110,8 +110,8 @@ export class Event extends BaseEntity {
 
   //Relations
 
-  @OneToMany(() => Timeline , (time) => time.event)
-  timings : Timeline[];
+  @OneToMany(() => Timeline, (time) => time.event)
+  timings: Timeline[];
 
   @ManyToOne(() => User, (user) => user.events)
   user: User;
@@ -120,11 +120,18 @@ export class Event extends BaseEntity {
   @JoinTable()
   registeredUsers: User[];
 
+  @ManyToMany(() => User, (user) => user.recordingEvents)
+  @JoinTable()
+  recordingUsers: User[];
+
   @OneToMany(() => Team, (team) => team.event)
   registeredTeam: Team[];
 
   @OneToMany(() => EventPay, (eventPay) => eventPay.event)
   eventsPay: EventPay[];
+
+  @OneToMany(() => EventPay, (registerPay) => registerPay.event)
+  registerPay: EventPay[];
 
   @OneToMany(() => EventFAQ, (faqs) => faqs.event)
   faqs: EventFAQ[];

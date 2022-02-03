@@ -162,13 +162,13 @@ export class User extends BaseEntity {
   @Field(() => UserRole)
   role: UserRole;
 
-  @Column({nullable : true})
-  @Field({nullable : true})
-  referralcode : string;
+  @Column({ nullable: true })
+  @Field({ nullable: true })
+  referralcode: string;
 
-  @Column({default : false})
+  @Column({ default: false })
   @Field()
-  isUsedReferral : boolean ;
+  isUsedReferral: boolean;
 
   // RELATIONS
   @OneToMany(() => Event, (event) => event.user)
@@ -177,11 +177,17 @@ export class User extends BaseEntity {
   @ManyToMany(() => Event, (event) => event.registeredUsers)
   registeredEvents: Event[];
 
+  @ManyToMany(() => Event, (event) => event.recordingUsers)
+  recordingEvents: Event[];
+
   @ManyToMany(() => Team, (team) => team.members)
   teams: Team[];
 
   @OneToMany(() => EventPay, (eventPay) => eventPay.user)
   eventsPay: EventPay[];
+
+  @OneToMany(() => EventPay, (eventPay) => eventPay.recordingUser)
+  recordingPay: EventPay[];
 
   @OneToOne(() => BlitzChess, (chess) => chess.user, { nullable: true })
   @JoinColumn()

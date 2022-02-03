@@ -44,9 +44,17 @@ class EventPay extends BaseEntity {
   @Field(() => Event)
   event: Event;
 
+  @ManyToOne(() => Event, (recording) => recording.registerPay)
+  @Field(() => Event)
+  recording: Event;
+
   @ManyToOne(() => User, (user) => user.eventsPay)
   @Field(() => User)
   user: User;
+
+  @ManyToOne(() => User, (user) => user.recordingPay)
+  @Field(() => User)
+  recordingUser: User;
 }
 
 export default EventPay;

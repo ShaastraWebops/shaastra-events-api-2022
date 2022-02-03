@@ -17,7 +17,13 @@ import {
   Resolver,
   Root,
 } from "type-graphql";
-import { ENVOYEMAILS, REFERRALCODE1, REFERRALCODE2, RegistraionType, Vertical } from "../utils";
+import {
+  ENVOYEMAILS,
+  REFERRALCODE1,
+  REFERRALCODE2,
+  RegistraionType,
+  Vertical,
+} from "../utils";
 import { User } from "../entities/User";
 import { Team } from "../entities/Team";
 import { MyContext } from "../utils/context";
@@ -146,7 +152,11 @@ export class EventResolver {
 
   @Authorized()
   @Mutation(() => RegisterOutput)
-  async register(@Arg("EventID") id: string , @Ctx() { user }: MyContext, @Arg("referral",{nullable : true}) referral?: string) {
+  async register(
+    @Arg("EventID") id: string,
+    @Ctx() { user }: MyContext,
+    @Arg("referral", { nullable: true }) referral?: string
+  ) {
     const event = await Event.findOneOrFail(id, {
       relations: ["registeredUsers"],
     });
@@ -156,7 +166,8 @@ export class EventResolver {
     ) {
       throw new Error("Maximum registrations reached");
     }
-    if (event.vertical === Vertical.WORKSHOPS) throw new Error("Registrations Closed");
+    if (event.vertical === Vertical.WORKSHOPS)
+      throw new Error("Registrations Closed");
     if (event.registrationOpenTime && event.registrationCloseTime) {
       // const startDate = new Date(event.registrationOpenTime);
       const currentDate = new Date();
@@ -230,15 +241,26 @@ export class EventResolver {
       // ) {
       //   options.amount = Number(event.earlybidoffer) * 100;
       // }
-      if(referral && REFERRALCODE1.includes(referral)){
-        options.amount = Math.round(0.95* Number(event.registrationfee))*100
-      }else if(referral && REFERRALCODE2.includes(referral) && ENVOYEMAILS.includes(user.email)){
-        options.amount = Math.round(0.90* Number(event.registrationfee))*100
-      }else if(referral && REFERRALCODE2.includes(referral) && !ENVOYEMAILS.includes(user.email)){
-        options.amount = Math.round(0.95* Number(event.registrationfee))*100
-      }
-      else if(referral && !REFERRALCODE2.includes(referral) && !REFERRALCODE1.includes(referral)){
-        throw new Error("Referral Code not valid")
+      if (referral && REFERRALCODE1.includes(referral)) {
+        options.amount = Math.round(0.95 * Number(event.registrationfee)) * 100;
+      } else if (
+        referral &&
+        REFERRALCODE2.includes(referral) &&
+        ENVOYEMAILS.includes(user.email)
+      ) {
+        options.amount = Math.round(0.9 * Number(event.registrationfee)) * 100;
+      } else if (
+        referral &&
+        REFERRALCODE2.includes(referral) &&
+        !ENVOYEMAILS.includes(user.email)
+      ) {
+        options.amount = Math.round(0.95 * Number(event.registrationfee)) * 100;
+      } else if (
+        referral &&
+        !REFERRALCODE2.includes(referral) &&
+        !REFERRALCODE1.includes(referral)
+      ) {
+        throw new Error("Referral Code not valid");
       }
 
       await instance.orders.create(options, function (err: any, order: any) {
@@ -265,7 +287,7 @@ export class EventResolver {
     @Arg("data") data: UpdateEventPayInput,
     @Arg("EventId") id: string,
     @Ctx() { user }: MyContext,
-    @Arg("referral",{nullable : true}) referral ?:string
+    @Arg("referral", { nullable: true }) referral?: string
   ) {
     try {
       /* Verify the signature */
@@ -284,12 +306,11 @@ export class EventResolver {
           payementId: data.payementId,
           paymentSignature: data.paymentSignature,
           isPaid: true,
-          referralcode : referral
+          referralcode: referral,
         }
       );
       if (affected !== 1) throw new Error("Update failed");
 
-      
       /* Update the user details in registered users */
       const event = await Event.findOneOrFail(id, {
         relations: ["registeredUsers"],
@@ -301,29 +322,28 @@ export class EventResolver {
         eventname: event.name,
         email: user.email,
       });
-      if(referral){
+      if (referral) {
         var reff = JSON.stringify({
-          "referalcode": referral,
-          "coursename": event.name
+          referalcode: referral,
+          coursename: event.name,
         });
 
         var refconfig = {
-          method: 'post',
-          url: 'https://sheet.best/api/sheets/f8d10436-8ee1-42ef-87ab-3e17a9c99d1c',
-          headers: { 
-            'Content-Type': 'application/json'
+          method: "post",
+          url: "https://sheet.best/api/sheets/f8d10436-8ee1-42ef-87ab-3e17a9c99d1c",
+          headers: {
+            "Content-Type": "application/json",
           },
-          data : reff
+          data: reff,
         };
 
-        await axios(refconfig)
-        .catch(function (error : any) {
+        await axios(refconfig).catch(function (error: any) {
           console.log(error);
         });
-        }
-        var reqdata = JSON.stringify({
-          userId: user.id,
-        });
+      }
+      var reqdata = JSON.stringify({
+        userId: user.id,
+      });
 
       var config = {
         method: "post",
@@ -355,8 +375,8 @@ export class EventResolver {
     @Ctx() { user }: MyContext,
     @Arg("workshopsIDs", () => [String], { nullable: true })
     workshopsID: string[],
-    @Arg("TShirtsDetails",{ nullable : true}) tShirtsDetails?: TShirtsDetails,
-    @Arg("referral",{nullable : true}) referral?: string
+    @Arg("TShirtsDetails", { nullable: true }) tShirtsDetails?: TShirtsDetails,
+    @Arg("referral", { nullable: true }) referral?: string
   ) {
     var combodetails;
     if (combo === "AI Combo") {
@@ -444,17 +464,28 @@ export class EventResolver {
       currency: "INR",
       receipt: user.shaastraID + combo,
     };
-    if(referral && REFERRALCODE1.includes(referral)){
-      options.amount = Math.round(0.95* Number(combodetails?.fee!))*100
-    }else if(referral && REFERRALCODE2.includes(referral) && ENVOYEMAILS.includes(user.email)){
-      options.amount = Math.round(0.90* Number(combodetails?.fee!))*100
-    }else if(referral && REFERRALCODE2.includes(referral) && !ENVOYEMAILS.includes(user.email)){
-      options.amount = Math.round(0.95* Number(combodetails?.fee!))*100
+    if (referral && REFERRALCODE1.includes(referral)) {
+      options.amount = Math.round(0.95 * Number(combodetails?.fee!)) * 100;
+    } else if (
+      referral &&
+      REFERRALCODE2.includes(referral) &&
+      ENVOYEMAILS.includes(user.email)
+    ) {
+      options.amount = Math.round(0.9 * Number(combodetails?.fee!)) * 100;
+    } else if (
+      referral &&
+      REFERRALCODE2.includes(referral) &&
+      !ENVOYEMAILS.includes(user.email)
+    ) {
+      options.amount = Math.round(0.95 * Number(combodetails?.fee!)) * 100;
+    } else if (
+      referral &&
+      !REFERRALCODE2.includes(referral) &&
+      !REFERRALCODE1.includes(referral)
+    ) {
+      throw new Error("Referral Code not valid");
     }
-    else if(referral && !REFERRALCODE2.includes(referral) && !REFERRALCODE1.includes(referral)){
-      throw new Error("Referral Code not valid")
-    }
-    
+
     await instance.orders.create(options, function (err: any, order: any) {
       if (err) throw new Error("Order Creation failed. Please Retry");
       orderId = order.id;
@@ -499,7 +530,7 @@ export class EventResolver {
   async ComboupdateEventPay(
     @Arg("data") data: UpdateEventPayInput,
     @Ctx() { user }: MyContext,
-    @Arg("referral",{nullable : true}) referral ?:string
+    @Arg("referral", { nullable: true }) referral?: string
   ) {
     try {
       /* Verify the signature */
@@ -519,11 +550,11 @@ export class EventResolver {
 
       await Promise.all(
         eventpay.map(async (eve) => {
-            (eve.isPaid = true),
+          (eve.isPaid = true),
             (eve.payementId = data.payementId),
             (eve.paymentSignature = data.paymentSignature),
-              referral ? eve.referralcode = referral + " combo"  : null,
-          await eve.save();
+            referral ? (eve.referralcode = referral + " combo") : null,
+            await eve.save();
         })
       ).catch(() => {
         throw new Error("Update failed");
@@ -547,25 +578,24 @@ export class EventResolver {
         });
       }
 
-      if(referral){
+      if (referral) {
         var reff = JSON.stringify({
-          "referalcode": referral,
-          "coursename": "Combo offer"
+          referalcode: referral,
+          coursename: "Combo offer",
         });
         var refconfig = {
-          method: 'post',
-          url: 'https://sheet.best/api/sheets/f8d10436-8ee1-42ef-87ab-3e17a9c99d1c',
-          headers: { 
-            'Content-Type': 'application/json'
+          method: "post",
+          url: "https://sheet.best/api/sheets/f8d10436-8ee1-42ef-87ab-3e17a9c99d1c",
+          headers: {
+            "Content-Type": "application/json",
           },
-          data : reff
+          data: reff,
         };
 
-        await axios(refconfig)
-        .catch(function (error : any) {
+        await axios(refconfig).catch(function (error: any) {
           console.log(error);
         });
-        }
+      }
 
       /* Update the user details in registered users */
       await Promise.all(
@@ -602,6 +632,124 @@ export class EventResolver {
             });
         })
       );
+      return true;
+    } catch (e) {
+      throw new Error(e);
+    }
+  }
+
+  @Authorized()
+  @Mutation(() => RegisterOutput)
+  async registerRecording(
+    @Arg("offerType") offerType: string,
+    @Ctx() { user }: MyContext,
+    @Arg("workshopsIDs", () => [String])
+    workshopsID: string[]
+  ) {
+    var combodetails;
+    if (offerType === "WORKSHOP") {
+      combodetails = {
+        fee: 500,
+      };
+    } else if (offerType === "3_WORKSHOPS") {
+      combodetails = {
+        fee: 999,
+      };
+    }
+    if (!user) throw new Error("Login to Register");
+    var flag = 0;
+    await Promise.all(
+      workshopsID.map(async (eve) => {
+        const event = await Event.findOne(eve, {
+          relations: ["recordingUsers"],
+        });
+        const userF = event?.recordingUsers.filter(
+          (useR) => useR.id === user.id
+        );
+        if (userF?.length === 1) {
+          flag = 1;
+        }
+      })!
+    );
+    if (flag) {
+      throw new Error("User Already registered in one of the workshop");
+    }
+    /* Create the order id */
+    let orderId: string = "";
+
+    var options = {
+      amount: combodetails?.fee! * 100,
+      currency: "INR",
+      receipt: user.shaastraID + offerType,
+    };
+
+    await instance.orders.create(options, function (err: any, order: any) {
+      if (err) throw new Error("Order Creation failed. Please Retry");
+      orderId = order.id;
+    });
+
+    if (orderId === "") throw new Error("Order Creation failed. Please Retry");
+
+    /* Store the details in database */
+    await Promise.all(
+      workshopsID.map(async (eve) => {
+        const event = await Event.findOne(eve, {
+          relations: ["recordingUsers"],
+        });
+        const a = await EventPay.create({
+          orderId,
+          amount: Math.round(Number(options.amount) / 3),
+          recording: event,
+          recordingUser: user,
+        }).save();
+        console.log(a);
+      })!
+    );
+    return {
+      eventPay: {
+        orderId,
+        user,
+        amount: options.amount,
+      },
+    };
+  }
+
+  @Authorized()
+  @Mutation(() => Boolean)
+  async updateRecordingPay(
+    @Arg("data") data: UpdateEventPayInput,
+    @Ctx() { user }: MyContext
+  ) {
+    try {
+      /* Verify the signature */
+      const body = data.orderId + "|" + data.payementId;
+      const expectedSignature = crypto
+        .createHmac("sha256", process.env.RAZORPAY_SECRET!)
+        .update(body.toString())
+        .digest("hex");
+      if (expectedSignature !== data.paymentSignature)
+        throw new Error("Invalid Payment Signature");
+
+      /* Update the details in database */
+      const eventpay = await EventPay.find({
+        where: { orderId: data.orderId },
+        relations: ["recording"],
+      });
+      await Promise.all(
+        eventpay.map(async (eve) => {
+          eve.isPaid = true;
+          eve.payementId = data.payementId;
+          eve.paymentSignature = data.paymentSignature;
+          await eve.save();
+
+          const event = await Event.findOneOrFail(eve.recording.id, {
+            relations: ["recordingUsers"],
+          });
+          event.recordingUsers.push(user);
+          await event.save();
+        })
+      )
+
       return true;
     } catch (e) {
       throw new Error(e);
@@ -682,18 +830,34 @@ export class EventResolver {
 
   @Authorized(["ADMIN"])
   @Query(() => Number)
-  async getPaidUsersCount() {
-    return await EventPay.count({ where: { isPaid: true } });
+  async getPaidUsersCount(@Root() { id }: Event) {
+    return await EventPay.count({ where: { isPaid: true, event: id } });
+  }
+
+  @Authorized(["ADMIN"])
+  @Query(() => Number)
+  async getRecordingUsersCount(@Root() { id }: Event) {
+    return await EventPay.count({ where: { isPaid: true, recording: id } });
   }
 
   @Authorized(["ADMIN"])
   @Query(() => String)
   async TShirtDetailsCSV() {
     let csv;
-    const TshirtDeatails = await TShirt.find({where : {isPaid : true}})
+    const TshirtDeatails = await TShirt.find({ where: { isPaid: true } });
     csv = parse(TshirtDeatails);
 
     return csv;
+  }
+
+  @Authorized(["ADMIN"])
+  @FieldResolver(() => [User])
+  async recordingUsers(@Root() { id }: Event) {
+    const event = await Event.findOneOrFail(id, {
+      relations: ["recordingUsers"],
+    });
+
+    return event.recordingUsers;
   }
 
   @Authorized(["ADMIN"])
