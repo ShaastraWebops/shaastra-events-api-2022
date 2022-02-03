@@ -649,7 +649,7 @@ export class EventResolver {
     var combodetails;
     if (offerType === "WORKSHOP") {
       combodetails = {
-        fee: 500,
+        fee: 400,
       };
     } else if (offerType === "3_WORKSHOPS") {
       combodetails = {
