@@ -851,6 +851,32 @@ export class EventResolver {
   }
 
   @Authorized(["ADMIN"])
+  @Query(() => String)
+  async recordingUsersCSV(@Arg("EventID") id: string) {
+  
+    const eventRepository = getRepository(Event);
+
+      let csv;
+      const registeredUsers = await eventRepository
+        .createQueryBuilder("event")
+        .where("event.id = :eventId", { eventId: id })
+        .leftJoinAndSelect("event.recordingUsers", "user")
+        .select([
+          "user.name",
+          "user.email",
+          "user.shaastraID",
+          "user.mobile",
+          "user.college",
+          "user.department",
+        ])
+        .execute();
+
+      csv = parse(registeredUsers);
+      
+      return csv;
+  }
+
+  @Authorized(["ADMIN"])
   @FieldResolver(() => [User])
   async recordingUsers(@Root() { id }: Event) {
     const event = await Event.findOneOrFail(id, {
