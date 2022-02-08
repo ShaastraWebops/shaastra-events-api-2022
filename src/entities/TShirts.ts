@@ -47,6 +47,10 @@ export class TShirt extends BaseEntity {
   @Field()
   size: string;
 
+  @Column({nullable : true})
+  @Field({nullable : true})
+  remarks: string;
+
   @Column({ type: "boolean", default: false })
   @Field(() => Boolean)
   isPaid: Boolean;

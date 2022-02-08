@@ -644,14 +644,21 @@ export class EventResolver {
     @Arg("offerType") offerType: string,
     @Ctx() { user }: MyContext,
     @Arg("workshopsIDs", () => [String])
-    workshopsID: string[]
+    workshopsID: string[],
+    @Arg("TShirtsDetails", { nullable: true }) tShirtsDetails?: TShirtsDetails,
   ) {
     var combodetails;
     if (offerType === "WORKSHOP") {
+      if(workshopsID[0] === '') throw new Error("Please select a Workshop");
       combodetails = {
         fee: 400,
       };
     } else if (offerType === "3_WORKSHOPS") {
+      if(workshopsID[0] === '' || workshopsID[1] === '' || workshopsID[2] === '' ) throw new Error("Please select 3 Workshops")
+      combodetails = {
+        fee: 999,
+      };
+    }else if (offerType === "T_shirt") {
       combodetails = {
         fee: 999,
       };
@@ -705,6 +712,17 @@ export class EventResolver {
         console.log(a);
       })!
     );
+    if(tShirtsDetails){
+      await TShirt.create({
+        name: user.name,
+        email: user.email,
+        mobile: user.mobile,
+        shaastraID: user.shaastraID,
+        orderId,
+        ...tShirtsDetails,
+      }).save();
+      
+    }
     return {
       eventPay: {
         orderId,
@@ -731,6 +749,24 @@ export class EventResolver {
         throw new Error("Invalid Payment Signature");
 
       /* Update the details in database */
+      const tShirtOrderCount = await TShirt.count({
+        where: { orderId: data.orderId },
+      });
+      if (tShirtOrderCount === 1) {
+        const tShirtOrder = await TShirt.findOne({
+          where: { orderId: data.orderId },
+        });
+        tShirtOrder!.payementId = data.payementId;
+        tShirtOrder!.paymentSignature = data.paymentSignature;
+        tShirtOrder!.isPaid = true;
+        tShirtOrder!.remarks = "Workshop Recording Combo"
+        await tShirtOrder?.save();
+        await User.sendConfirmationMail({
+          name: user.name,
+          eventname: "t-shirt",
+          email: user.email,
+        });
+      }
       const eventpay = await EventPay.find({
         where: { orderId: data.orderId },
         relations: ["recording"],
@@ -749,7 +785,6 @@ export class EventResolver {
           await event.save();
         })
       )
-
       return true;
     } catch (e) {
       throw new Error(e);
