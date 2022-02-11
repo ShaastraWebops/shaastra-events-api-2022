@@ -33,7 +33,7 @@ import Razorpay from "razorpay";
 import EventPay from "../entities/EventPay";
 import { UpdateEventPayInput } from "../inputs/EventPay";
 import { parse } from "json2csv";
-import { getRepository } from "typeorm";
+import { getRepository, IsNull, Not } from "typeorm";
 import { Timeline } from "../entities/Timeline";
 import dotenv from "dotenv";
 import crypto from "crypto";
@@ -876,6 +876,12 @@ export class EventResolver {
   }
 
   @Authorized(["ADMIN"])
+  @Query(() => Number)
+  async getAllRecordingUsersCount() {
+    return await EventPay.count({ where: { isPaid: true, recording:  Not(IsNull())} });
+  }
+
+  @Authorized(["ADMIN"])
   @Query(() => String)
   async TShirtDetailsCSV() {
     let csv;
@@ -939,6 +945,14 @@ export class EventResolver {
     });
 
     return event.registeredUsers.length;
+  }
+  @FieldResolver(() => Number)
+  async recordingUserCount(@Root() { id }: Event) {
+    const event = await Event.findOneOrFail(id, {
+      relations: ["recordingUsers"],
+    });
+  
+    return event.recordingUsers.length;
   }
 
   @FieldResolver(() => [Timeline])
