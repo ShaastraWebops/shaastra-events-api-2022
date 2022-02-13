@@ -749,24 +749,6 @@ export class EventResolver {
         throw new Error("Invalid Payment Signature");
 
       /* Update the details in database */
-      const tShirtOrderCount = await TShirt.count({
-        where: { orderId: data.orderId },
-      });
-      if (tShirtOrderCount === 1) {
-        const tShirtOrder = await TShirt.findOne({
-          where: { orderId: data.orderId },
-        });
-        tShirtOrder!.payementId = data.payementId;
-        tShirtOrder!.paymentSignature = data.paymentSignature;
-        tShirtOrder!.isPaid = true;
-        tShirtOrder!.remarks = "Workshop Recording Combo"
-        await tShirtOrder?.save();
-        await User.sendConfirmationMail({
-          name: user.name,
-          eventname: "t-shirt",
-          email: user.email,
-        });
-      }
       const eventpay = await EventPay.find({
         where: { orderId: data.orderId },
         relations: ["recording"],
@@ -785,6 +767,24 @@ export class EventResolver {
           await event.save();
         })
       )
+      const tShirtOrderCount = await TShirt.count({
+        where: { orderId: data.orderId },
+      });
+      if (tShirtOrderCount === 1) {
+        const tShirtOrder = await TShirt.findOne({
+          where: { orderId: data.orderId },
+        });
+        tShirtOrder!.payementId = data.payementId;
+        tShirtOrder!.paymentSignature = data.paymentSignature;
+        tShirtOrder!.isPaid = true;
+        tShirtOrder!.remarks = "Workshop Recording Combo"
+        await tShirtOrder?.save();
+        await User.sendConfirmationMail({
+          name: user.name,
+          eventname: "t-shirt",
+          email: user.email,
+        });
+      }
       return true;
     } catch (e) {
       throw new Error(e);
