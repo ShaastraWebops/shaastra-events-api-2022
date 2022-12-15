@@ -1,55 +1,51 @@
-import nodemailer from "nodemailer";
-import { google } from "googleapis";
-import SMTPTransport from "nodemailer/lib/smtp-transport";
-import dotenv from "dotenv";
+const Recipient = require("mailersend").Recipient;
+const EmailParams = require("mailersend").EmailParams;
+const MailerSend = require("mailersend");
 
-dotenv.config();
+const mailersend = new MailerSend({
+    api_key: "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIxIiwianRpIjoiNjRhZGEwYjIwNThlOGI4M2U2YWUyOTlhNmU1YzZiYTk2ZTlkZWVlYzk3MjRjNWJlOGIwNjYzNzE3NGUxZjJkZjY4ZWFlYTA3YmZkOGJiM2IiLCJpYXQiOjE2NjQyMjE0ODkuMTc0ODgyLCJuYmYiOjE2NjQyMjE0ODkuMTc0ODg5LCJleHAiOjQ4MTk4OTUwODkuMTY4Nzk4LCJzdWIiOiIzMjY1NiIsInNjb3BlcyI6WyJlbWFpbF9mdWxsIiwiZG9tYWluc19mdWxsIiwiYWN0aXZpdHlfZnVsbCIsImFuYWx5dGljc19mdWxsIiwidG9rZW5zX2Z1bGwiLCJ3ZWJob29rc19mdWxsIiwidGVtcGxhdGVzX2Z1bGwiLCJzdXBwcmVzc2lvbnNfZnVsbCIsInNtc19mdWxsIiwiZW1haWxfdmVyaWZpY2F0aW9uX2Z1bGwiXX0.Yz08IQEjX3Ki5XnLFjbgHcLJGQtTtT_svFaP2B4imWR8LIiWmDp9kbrpkjUf7gv6te_jmi02taFD8_kcypMZkf8bj3kyGZoL6Pk7LAuOTgeLCclpaZampSk79HqBWJU_twviTD2k8FVoPhu8oia9tEMHVCDsn6b2ETzx77tVPgyuh6Ph8qDtPfwY-px3-ilXcunSQjxOmuTclxbgbTK5C7tlXfV-RYN0d8FalY0zXwNHNeR8TQmlNrSWJzbNIsU_DOi9qLtU_2XiW3anvpxOxIV5nZtIicCoaKDPnd19beY0j4_DKE-K3cRE1tPvTTR1ipYWr9czhPp7AK6NhKphekAf23RzwayE3B9yfezNhRiXbvf68l-Dzh3QSH19myJeSkOIXQRl0mnFPFsBYYB6YfCWh91eyf75S0AqleMkrs-FL1FnjiN6iQqnyy5OESE6D_BFkRNEz4u_KhA8_EGvZI5Fi3PmbxcNJYsDD7MfimXrpQRd7sO_uItxLCRLiyidi-KGSP7pSTMFC-jiix8oV8fsRfu5qc4Us4dwjnqvV_AWpihLuDYCEy15FfdaUsM9YO3bXe_VF76gZ8tKGl6ZXfImEulS5gEsoO9JAybPj0xACwbqBqLS3KV2xVcWFokFBGDSVrfEF5rSj5-5WCzq1d3BZSSUfMLFDSSbHei83_k",
+});
 
-const CLIENT_ID = process.env.CLIENT_ID;
-const CLIENT_SECRET = process.env.CLIENT_SECRET;
-const REDIRECT_URI = process.env.REDIRECT_URI;
-const REFRESH_TOKEN = process.env.REFRESH_TOKEN;
+export const mail = async ({
+  email,
+  sub,
+  body,
+}: {
+  email: string;
+  sub: string;
+  body: string;
+}) => {
+    try{
 
-const oAuth2Client = new google.auth.OAuth2(
-  CLIENT_ID,
-  CLIENT_SECRET,
-  REDIRECT_URI
-);
-oAuth2Client.setCredentials({ refresh_token: REFRESH_TOKEN});
+        const recipients = [
+        new Recipient(email)
+        ];
+        const emailParams = new EmailParams()
+        .setFrom("webops@shaastra.org")
+        .setFromName("Shaastra Webops")
+        .setRecipients(recipients)
+        .setReplyTo("webops@shaastra.org")
+        .setReplyToName("Shaastra Webops")
+        .setSubject(sub)
+        .setHtml(body)
 
-export const mail = async ({ email, sub, body } : { email: string, sub: string, body: string }) => {
-  const sendMail = async () => {
-      try {
-          const accessToken = await oAuth2Client.getAccessToken();
+        await mailersend.send(emailParams);
+    }catch(e){
+        console.log(e)
+    }
 
-          const transport = nodemailer.createTransport({
-              service: "gmail",
-              host: "smtp-relay.sendinblue.com",
-              port: 587,
-              auth: {
-                  type: 'OAuth2',
-                  user: 'webops@shaastra.org',
-                  clientId: CLIENT_ID,
-                  clientSecret: CLIENT_SECRET,
-                  refreshToken: REFRESH_TOKEN,
-                  accessToken: accessToken,
-              },
-          }  as SMTPTransport.Options);
+};
 
-          const mailOptions = {
-              from: 'webops@shaastra.org',
-              fromName: 'Shaastra 2022',
-              to: email,
-              subject: sub,
-              html: body
-          };
-          const result = await transport.sendMail(mailOptions);
-          return result;
-      } catch (error) {
-          return error;
-      }
-  }
-  sendMail()
-  .then((result) => console.log("Email sent...", result))
-  .catch((error) => console.log(error.message));
-} 
+
+
+export const sendConfirmationMail = async (
+  email: string,
+  name: string,
+  gtsID: string
+) => {
+  await mail({
+    email: email,
+    sub: "Payment and Registration Successful | Space Tech Summit, Shaastra IITM",
+    body: `<div dir="ltr"><span id="m_8802654507787307655gmail-docs-internal-guid-91d416e4-7fff-7de8-948a-9454112cd08c"><p dir="ltr" style="line-height:1.38;margin-top:0pt;margin-bottom:0pt"><span style="font-size:11pt;font-family:&quot;EB Garamond&quot;,serif;color:rgb(0,0,0);background-color:transparent;font-variant-numeric:normal;font-variant-east-asian:normal;vertical-align:baseline;white-space:pre-wrap">Respected ${name},&nbsp;</span></p><br><p dir="ltr" style="line-height:1.38;margin-top:0pt;margin-bottom:0pt"><span style="font-size:11pt;font-family:&quot;EB Garamond&quot;,serif;color:rgb(0,0,0);background-color:transparent;font-variant-numeric:normal;font-variant-east-asian:normal;vertical-align:baseline;white-space:pre-wrap">We have received your payment for attending Space-Tech Summit 2023. We are delighted to have you on board. Please save the registration ID which will be used to give you access to our conference. We'd keep adding further details about the conference at </span><a href="https://summit.shaastra.org" style="text-decoration-line:none" target="_blank" data-saferedirecturl="https://www.google.com/url?q=https://summit.shaastra.org&amp;source=gmail&amp;ust=1640272155856000&amp;usg=AOvVaw32bAKou8fLeh-dPaL_NDRc"><span style="font-size:11pt;font-family:&quot;EB Garamond&quot;,serif;background-color:transparent;font-variant-numeric:normal;font-variant-east-asian:normal;text-decoration-line:underline;vertical-align:baseline;white-space:pre-wrap">https://summit.shaastra.org</span></a><span style="font-size:11pt;font-family:&quot;EB Garamond&quot;,serif;color:rgb(0,0,0);background-color:transparent;font-variant-numeric:normal;font-variant-east-asian:normal;vertical-align:baseline;white-space:pre-wrap">&nbsp;</span></p><br><p dir="ltr" style="line-height:1.38;margin-top:0pt;margin-bottom:0pt"><span style="font-size:11pt;font-family:&quot;EB Garamond&quot;,serif;color:rgb(0,0,0);background-color:transparent;font-variant-numeric:normal;font-variant-east-asian:normal;vertical-align:baseline;white-space:pre-wrap">Your Registration ID : ${gtsID}</span></p><br><p dir="ltr" style="line-height:1.38;margin-top:0pt;margin-bottom:0pt"><span style="font-size:11pt;font-family:&quot;EB Garamond&quot;,serif;color:rgb(0,0,0);background-color:transparent;font-variant-numeric:normal;font-variant-east-asian:normal;vertical-align:baseline;white-space:pre-wrap">Please join the following WhatsApp group to stay updated with details regarding the conference. </span><a href="https://chat.whatsapp.com/ITK4Fjuh40QGJe0IWFqaSR" style="text-decoration-line:none" target="_blank" data-saferedirecturl="https://www.google.com/url?q=https://chat.whatsapp.com/ITK4Fjuh40QGJe0IWFqaSR&amp;source=gmail&amp;ust=1640272155856000&amp;usg=AOvVaw077PoI7lGY2zhZGc-XZ57_"><span style="font-size:11pt;font-family:&quot;EB Garamond&quot;,serif;background-color:transparent;font-variant-numeric:normal;font-variant-east-asian:normal;text-decoration-line:underline;vertical-align:baseline;white-space:pre-wrap">https://chat.whatsapp.com/<wbr>ITK4Fjuh40QGJe0IWFqaSR</span></a><span style="font-size:11pt;font-family:&quot;EB Garamond&quot;,serif;color:rgb(0,0,0);background-color:transparent;font-variant-numeric:normal;font-variant-east-asian:normal;vertical-align:baseline;white-space:pre-wrap"> .&nbsp;</span></p><br><p dir="ltr" style="line-height:1.38;margin-top:0pt;margin-bottom:0pt"><span style="font-size:11pt;font-family:&quot;EB Garamond&quot;,serif;color:rgb(0,0,0);background-color:transparent;font-variant-numeric:normal;font-variant-east-asian:normal;vertical-align:baseline;white-space:pre-wrap">Feel free to contact us via mail, or any of the admins via WhatsApp for any further queries.</span></p><br><p dir="ltr" style="line-height:1.38;margin-top:0pt;margin-bottom:0pt"><span style="font-size:11pt;font-family:&quot;EB Garamond&quot;,serif;color:rgb(14,16,26);background-color:transparent;font-variant-numeric:normal;font-variant-east-asian:normal;vertical-align:baseline;white-space:pre-wrap">Warm regards&nbsp;</span></p><div dir="ltr" style="margin-left:0pt" align="left"><table style="border:none;border-collapse:collapse"><colgroup><col width="134"><col width="302"></colgroup><tbody><tr style="height:175.525pt"><td style="vertical-align:top;padding:5pt;overflow:hidden"><p dir="ltr" style="line-height:1.38;margin-top:0pt;margin-bottom:0pt"><span style="font-size:11pt;font-family:&quot;EB Garamond&quot;,serif;color:rgb(0,0,0);background-color:transparent;font-variant-numeric:normal;font-variant-east-asian:normal;vertical-align:baseline;white-space:pre-wrap"><span style="border:none;display:inline-block;overflow:hidden;width:123px;height:123px"><img src="../images/Black_Logo.png" width="123" height="123" style="margin-left:0px" class="CToWUd"></span></span></p><br></td><td style="vertical-align:top;padding:5pt;overflow:hidden"><p dir="ltr" style="line-height:1.38;margin-top:0pt;margin-bottom:0pt">&nbsp;</p><p dir="ltr" style="line-height:1.38;margin-top:0pt;margin-bottom:0pt"><span style="font-size:11pt;font-family:&quot;EB Garamond&quot;,serif;color:rgb(0,0,0);background-color:transparent;font-variant-numeric:normal;font-variant-east-asian:normal;vertical-align:baseline;white-space:pre-wrap">Space-Tech Summit Team&nbsp;</span></p><p dir="ltr" style="line-height:1.38;margin-top:0pt;margin-bottom:0pt"><span style="font-size:11pt;font-family:&quot;EB Garamond&quot;,serif;color:rgb(0,0,0);background-color:transparent;font-variant-numeric:normal;font-variant-east-asian:normal;vertical-align:baseline;white-space:pre-wrap">Shaastra, IIT Madras&nbsp;&nbsp;</span></p><p dir="ltr" style="line-height:1.38;margin-top:0pt;margin-bottom:0pt"><a href="https://www.facebook.com/Shaastra" style="text-decoration-line:none" target="_blank" data-saferedirecturl="https://www.google.com/url?q=https://www.facebook.com/Shaastra&amp;source=gmail&amp;ust=1640272155856000&amp;usg=AOvVaw0nT_Wrnv3t233BxE9YkOEG"><span style="font-size:11pt;font-family:&quot;EB Garamond&quot;,serif;background-color:transparent;font-variant-numeric:normal;font-variant-east-asian:normal;text-decoration-line:underline;vertical-align:baseline;white-space:pre-wrap"><span style="border:none;display:inline-block;overflow:hidden;width:25px;height:25px"><img src="https://lh5.googleusercontent.com/Zs_4XXTPJapJ-pNjNzUiTar6LAacW66dbgvoW8kXdAyamr1ld712W-qgc5AQPEPuqVQTYLu0iFWW-sTdJ8VBswuDfYbTPzng-tg3uHw9hdf3ciPuLPApRRii3KIicvVxDHrTKao" width="25" height="25" style="margin-left:0px;margin-top:0px" class="CToWUd"></span></span></a><span style="font-size:11pt;font-family:&quot;EB Garamond&quot;,serif;color:rgb(0,0,0);background-color:transparent;font-variant-numeric:normal;font-variant-east-asian:normal;vertical-align:baseline;white-space:pre-wrap"> </span><a href="https://www.instagram.com/shaastra_iitm/" style="text-decoration-line:none" target="_blank" data-saferedirecturl="https://www.google.com/url?q=https://www.instagram.com/shaastra_iitm/&amp;source=gmail&amp;ust=1640272155856000&amp;usg=AOvVaw2j_lccLfl-7S3YaP-Bsi6u"><span style="font-size:11pt;font-family:&quot;EB Garamond&quot;,serif;background-color:transparent;font-variant-numeric:normal;font-variant-east-asian:normal;text-decoration-line:underline;vertical-align:baseline;white-space:pre-wrap"><span style="border:none;display:inline-block;overflow:hidden;width:25px;height:25px"><img src="https://lh6.googleusercontent.com/AKkGxOI0qiqDKgzIcGjx3_T8dR4ByMjcafNTU00Vo-TxpoUXvCXu2ESDeoo7SBoCxTgGCqbJvG_TwmMeged0b1BTkNQqDLpCDbnpOYraLCIMk1TDIVvFY5SgGGvq1Hyaq8JZRFs" width="25" height="25" style="margin-left:0px;margin-top:0px" class="CToWUd"></span></span></a><span style="font-size:11pt;font-family:&quot;EB Garamond&quot;,serif;color:rgb(0,0,0);background-color:transparent;font-variant-numeric:normal;font-variant-east-asian:normal;vertical-align:baseline;white-space:pre-wrap"> </span><a href="https://www.youtube.com/iitmshaastra" style="text-decoration-line:none" target="_blank" data-saferedirecturl="https://www.google.com/url?q=https://www.youtube.com/iitmshaastra&amp;source=gmail&amp;ust=1640272155856000&amp;usg=AOvVaw2WRKQDT26idEtk6MfJ-XqE"><span style="font-size:11pt;font-family:&quot;EB Garamond&quot;,serif;background-color:transparent;font-variant-numeric:normal;font-variant-east-asian:normal;text-decoration-line:underline;vertical-align:baseline;white-space:pre-wrap"><span style="border:none;display:inline-block;overflow:hidden;width:26px;height:26px"><img src="https://lh3.googleusercontent.com/y06WO8ZgN8_G1XQ60qrZEo-OmdgmmpSdkB65loPFAVivzoEYp5wmp58MvlMXEq5cdCqOlp8e_MdOVkJ8g9vrWC_L0uNdaUCUm6JDo8QgF1GWNMdBMWZR6UsmhspqgUeRmJB7aiQ" width="26" height="26" style="margin-left:0px;margin-top:0px" class="CToWUd"></span></span></a><span style="font-size:11pt;font-family:&quot;EB Garamond&quot;,serif;color:rgb(0,0,0);background-color:transparent;font-variant-numeric:normal;font-variant-east-asian:normal;vertical-align:baseline;white-space:pre-wrap"> </span><a href="https://www.linkedin.com/company/shaastra-iit-madras/" style="text-decoration-line:none" target="_blank" data-saferedirecturl="https://www.google.com/url?q=https://www.linkedin.com/company/shaastra-iit-madras/&amp;source=gmail&amp;ust=1640272155856000&amp;usg=AOvVaw0nhH8Yugcd3Iybt-ooUo-x"><span style="font-size:11pt;font-family:&quot;EB Garamond&quot;,serif;background-color:transparent;font-variant-numeric:normal;font-variant-east-asian:normal;text-decoration-line:underline;vertical-align:baseline;white-space:pre-wrap"><span style="border:none;display:inline-block;overflow:hidden;width:26px;height:26px"><img src="https://lh5.googleusercontent.com/kMR32HW9wPYFBZo6Z-4H0af_-0IHVzTE9GQdykXI0yRlTzafG-PgyW2FITYWlDGAovwdlEKTxoe81r21CjQ3Co1DFKGzcsDLLC8ng0hxzIgld1PpBt4Ea2TTX7ogi4tGb1-Jblw" width="26" height="26" style="margin-left:0px;margin-top:0px" class="CToWUd"></span></span></a></p><br></td></tr></tbody></table></div></span></div>`,
+  });
+};
