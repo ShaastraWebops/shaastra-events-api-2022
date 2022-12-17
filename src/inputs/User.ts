@@ -48,29 +48,29 @@ export class LoginInput {
 @InputType("EditProfileInput")
 export class EditProfileInput {
 
-	@Field()
+	@Field({nullable: true})
 	name: string;
 
-	@Field()
+	@Field({nullable: true})
 	@IsEmail()
 	email: string;
 	
-	@Field()
+	@Field({nullable: true})
     mobile: string;
 
-	@Field()
+	@Field({nullable: true})
 	college: string;
 
-    @Field()
+    @Field({nullable: true})
 	department: string;
 
-	@Field()
+	@Field({nullable: true})
 	state: string;
 
-	@Field()
+	@Field({nullable: true})
 	city: string;
 
-    @Field()
+    @Field({nullable: true})
 	address: string;
 	
 

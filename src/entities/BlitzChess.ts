@@ -53,6 +53,6 @@ export class BlitzChess extends BaseEntity {
 
   @OneToOne(() => User, (user) => user.chessDetails)
   @JoinColumn()
-  @Field()
+  @Field(()=> User)
   user: User;
 }

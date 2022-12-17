@@ -131,6 +131,7 @@ export class UserResolver {
 
         let token = jwt.sign({ id: user.id }, process.env.JWT_SECRET || "secret");
         res.cookie("token", token ,{ httpOnly: false})
+        console.log(token);
 
         return user;
     }
