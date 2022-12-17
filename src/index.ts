@@ -19,7 +19,7 @@ const main = async () =>{
 
     await createConnection({
         type : "postgres",
-        url : process.env.DATABASE_URL,
+        url : "postgresql://postgres:postgres@localhost:5433/sh23",
         entities,
         synchronize : true,
         logging : true

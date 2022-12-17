@@ -25,7 +25,8 @@ export enum Vertical{
   ELECFEST = "ELECFEST",
   IGNITE = "IGNITE",
   STRATEGISTS = "STRATEGISTS",
-  WORKSHOPS = "WORKSHOPS"
+  WORKSHOPS = "WORKSHOPS",
+  OTHER = "OTHERS"
 }
 
 export interface SendVerificationMailOptions {

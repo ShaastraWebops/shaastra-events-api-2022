@@ -1889,6 +1889,14 @@ is-weakref@^1.0.1:
   dependencies:
     call-bind "^1.0.0"
 
+isomorphic-unfetch@^3.1.0:
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/isomorphic-unfetch/-/isomorphic-unfetch-3.1.0.tgz#87341d5f4f7b63843d468438128cb087b7c3e98f"
+  integrity sha512-geDJjpoZ8N0kWexiwkX8F9NkTsXhetLPVbZFQ+JTW239QNOwvB0gniuR1Wc6f0AMTn7/mFGyXvHTifrCp/GH8Q==
+  dependencies:
+    node-fetch "^2.6.1"
+    unfetch "^4.2.0"
+
 isstream@~0.1.2:
   version "0.1.2"
   resolved "https://registry.yarnpkg.com/isstream/-/isstream-0.1.2.tgz#47e63f7af55afa6f92e1500e690eb8b8529c099a"
@@ -2105,6 +2113,13 @@ lru-cache@^6.0.0:
   integrity sha512-Jo6dJ04CmSjuznwJSS3pUeWmd/H0ffTlkXXgwZi+eq1UCmqQwCh+eLsYOYCwY991i2Fah4h1BEMCx4qThGbsiA==
   dependencies:
     yallist "^4.0.0"
+
+mailersend@^1.4.5:
+  version "1.4.5"
+  resolved "https://registry.yarnpkg.com/mailersend/-/mailersend-1.4.5.tgz#4202898ba7730e0f4144d1e36c74ca080b99a91f"
+  integrity sha512-3+79NyFqGKDe1kTRF4WcJJR3Guk9AVLLrKC3gHdPzskGVga69eSJJ/FcevVvje78G7iHxz4yApLL2pJhNOwpQQ==
+  dependencies:
+    isomorphic-unfetch "^3.1.0"
 
 make-error@^1.1.1:
   version "1.3.6"
@@ -3046,6 +3061,11 @@ unbox-primitive@^1.0.1:
     has-bigints "^1.0.1"
     has-symbols "^1.0.2"
     which-boxed-primitive "^1.0.2"
+
+unfetch@^4.2.0:
+  version "4.2.0"
+  resolved "https://registry.yarnpkg.com/unfetch/-/unfetch-4.2.0.tgz#7e21b0ef7d363d8d9af0fb929a5555f6ef97a3be"
+  integrity sha512-F9p7yYCn6cIW9El1zi0HI6vqpeIvBsr3dSuRO6Xuppb1u5rXpCPmMvLSyECLhybr9isec8Ohl0hPekMVrEinDA==
 
 unpipe@1.0.0, unpipe@~1.0.0:
   version "1.0.0"
