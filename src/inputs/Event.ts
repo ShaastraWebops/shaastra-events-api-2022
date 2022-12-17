@@ -34,7 +34,7 @@ export class AddEventInput {
   participation: string;
 
   @Field({ nullable: true })
-  finalistst: string;
+  finalists: string;
 
   @Field({ nullable: true })
   registrationfee: string;

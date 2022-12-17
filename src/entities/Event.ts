@@ -74,7 +74,7 @@ export class Event extends BaseEntity {
 
   @Column({ nullable: true })
   @Field({ nullable: true })
-  finalistst: string;
+  finalists: string;
 
   @Column({ nullable: true })
   @Field({ nullable: true })
