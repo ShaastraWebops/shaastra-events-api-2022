@@ -3,10 +3,12 @@ import {
   AddEventInput,
   AddTimingsInput,
   EditEventInput,
+  TShirtsDetails,
 } from "../inputs/Event";
 import {
   Arg,
   Authorized,
+  Ctx,
   Field,
   FieldResolver,
   Mutation,
@@ -22,26 +24,26 @@ import {
 } from "../utils";
 import { User } from "../entities/User";
 import { Team } from "../entities/Team";
-// import { MyContext } from "../utils/context";
+import { MyContext } from "../utils/context";
 // import { isRegisteredInEvent } from "../utils/isRegisteredInEvent";
 import { EventFAQ } from "../entities/EventFAQ";
-// import Razorpay from "razorpay";
+import Razorpay from "razorpay";
 import EventPay from "../entities/EventPay";
-// import { UpdateEventPayInput } from "../inputs/EventPay";
+import { UpdateEventPayInput } from "../inputs/EventPay";
 import { parse } from "json2csv";
 import { getRepository, IsNull, Not } from "typeorm";
 import { Timeline } from "../entities/Timeline";
 import dotenv from "dotenv";
-// import crypto from "crypto";
+import crypto from "crypto";
 import { TShirt } from "../entities/TShirts";
 
 dotenv.config();
 const axios = require("axios");
 
-// var instance = new Razorpay({
-//   key_id: process.env.RAZORPAY_ID!,
-//   key_secret: process.env.RAZORPAY_SECRET,
-// });
+var instance = new Razorpay({
+  key_id: 'rzp_live_WQ7VB5TIMbvijH',
+  key_secret: 'bS0MWKA0RKv0VS3QGneUd6XU',
+});
 
 @ObjectType("GetEventsOutput")
 class GetEventsOutput {
@@ -52,14 +54,14 @@ class GetEventsOutput {
   count: Number;
 }
 
-// @ObjectType("RegisterOutput")
-// class RegisterOutput {
-//   @Field(() => Boolean, { nullable: true })
-//   registered: boolean | undefined;
+@ObjectType("RegisterOutput")
+class RegisterOutput {
+  @Field(() => Boolean, { nullable: true })
+  registered: boolean | undefined;
 
-//   @Field(() => EventPay, { nullable: true })
-//   eventPay: EventPay | undefined;
-// }
+  @Field(() => EventPay, { nullable: true })
+  eventPay: EventPay | undefined;
+}
 
 @Resolver(Event)
 export class EventResolver {
@@ -146,646 +148,620 @@ export class EventResolver {
     return !!affected;
   }
 
-  // @Authorized()
-  // @Mutation(() => RegisterOutput)
-  // async register(
-  //   @Arg("EventID") id: string,
-  //   @Ctx() { user }: MyContext,
-  //   @Arg("referral", { nullable: true }) referral?: string
-  // ) {
-  //   const event = await Event.findOneOrFail(id, {
-  //     relations: ["registeredUsers"],
-  //   });
-  //   if (
-  //     id === "ckxljoxqa00639bp7gu9o1sz9" &&
-  //     event.registeredUsers.length >= 150
-  //   ) {
-  //     throw new Error("Maximum registrations reached");
-  //   }
-  //   if (event.vertical === Vertical.WORKSHOPS)
-  //     throw new Error("Registrations Closed");
-  //   if (event.registrationOpenTime && event.registrationCloseTime) {
-  //     // const startDate = new Date(event.registrationOpenTime);
-  //     const currentDate = new Date();
-  //     let endDate;
-  //     // if (event.vertical === Vertical.WORKSHOPS) {
-  //     //   endDate = new Date("January 13,2022 09:59:59");
-  //     // } else {
-  //     endDate = new Date(event.registrationCloseTime);
-  //     endDate.setDate(endDate.getDate() + 1);
-  //     // }
+  @Authorized()
+  @Mutation(() => RegisterOutput)
+  async register(
+    @Arg("EventID") id: string,
+    @Ctx() { user }: MyContext,
+    @Arg("referral", { nullable: true }) referral?: string
+  ) {
+    console.log(referral)
+    const event = await Event.findOneOrFail(id, {
+      relations: ["registeredUsers"],
+    });
+    if (event.registrationOpenTime && event.registrationCloseTime) {
+      // const startDate = new Date(event.registrationOpenTime);
+      const currentDate = new Date();
+      let endDate;
+      // if (event.vertical === Vertical.WORKSHOPS) {
+      //   endDate = new Date("January 13,2022 09:59:59");
+      // } else {
+      endDate = new Date(event.registrationCloseTime);
+      endDate.setDate(endDate.getDate() + 1);
+      // }
 
-  //     // if (currentDate.getTime() <= startDate.getTime())
-  //     //   throw new Error("Registration is not opened yet");
-  //     if (currentDate.getTime() >= endDate.getTime())
-  //       throw new Error("Registration Closed");
-  //     if (event.registrationType === RegistraionType.TEAM)
-  //       throw new Error("Not allowed for individual registration");
-  //   }
-  //   if (!user) throw new Error("Login to Register");
-  //   if (event.registrationType === RegistraionType.NONE)
-  //     throw new Error("Registration for this event is not required");
+      // if (currentDate.getTime() <= startDate.getTime())
+      //   throw new Error("Registration is not opened yet");
+      if (currentDate.getTime() >= endDate.getTime())
+        throw new Error("Registration Closed");
+      if (event.registrationType === RegistraionType.TEAM)
+        throw new Error("Not allowed for individual registration");
+    }
+    if (!user) throw new Error("Login to Register");
+    if (event.registrationType === RegistraionType.NONE)
+      throw new Error("Registration for this event is not required");
 
-  //   const userF = event.registeredUsers.filter((useR) => useR.id === user.id);
-  //   if (userF.length === 1) throw new Error("User registered already");
-  //   if (!event.registrationfee || Number(event.registrationfee) === 0) {
-  //     event.registeredUsers.push(user);
-  //     await event.save();
-  //     await User.sendConfirmationMail({
-  //       name: user.name,
-  //       eventname: event.name,
-  //       email: user.email,
-  //     });
-  //     var data = JSON.stringify({
-  //       userId: user.id,
-  //     });
+    const userF = event.registeredUsers.filter((useR) => useR.id === user.id);
+    if (userF.length === 1) throw new Error("User registered already");
+    if (!event.registrationfee || Number(event.registrationfee) === 0) {
+      event.registeredUsers.push(user);
+      await event.save();
+      await User.sendConfirmationMail({
+        name: user.name,
+        eventname: event.name,
+        email: user.email,
+      });
+      console.log(event.registeredUsers, "registered")
+      return { registered: !!event };
+    } else {
+      /* Create the order id */
+      let orderId: string = "";
 
-  //     var config = {
-  //       method: "post",
-  //       url: `https://mavex.in/api/events/${event.id}/registrations`,
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //       },
-  //       data: data,
-  //     };
+      // const currentdate = new Date();
+      // const deadline = new Date("January 1,2022 23:59:59");
 
-  //     await axios(config)
-  //       .then(function (response: any) {
-  //         console.log(JSON.stringify(response.data));
-  //       })
-  //       .catch(function (error: any) {
-  //         console.log(error);
-  //       });
+      var options = {
+        amount: Number(event.registrationfee) * 100,
+        currency: "INR",
+        receipt: user.shaastraID + "_" + event.name.slice(0, 24),
+      };
 
-  //     return { registered: !!event };
-  //   } else {
-  //     /* Create the order id */
-  //     let orderId: string = "";
+      // if (
+      //   event.earlybidoffer &&
+      //   deadline.getTime() - currentdate.getTime() > 0
+      // ) {
+      //   options.amount = Number(event.earlybidoffer) * 100;
+      // }
+      // if (referral && REFERRALCODE1.includes(referral)) {
+      //   options.amount = Math.round(0.95 * Number(event.registrationfee)) * 100;
+      // } else if (
+      //   referral &&
+      //   REFERRALCODE2.includes(referral) &&
+      //   ENVOYEMAILS.includes(user.email)
+      // ) {
+      //   options.amount = Math.round(0.9 * Number(event.registrationfee)) * 100;
+      // } else if (
+      //   referral &&
+      //   REFERRALCODE2.includes(referral) &&
+      //   !ENVOYEMAILS.includes(user.email)
+      // ) {
+      //   options.amount = Math.round(0.95 * Number(event.registrationfee)) * 100;
+      // } else if (
+      //   referral &&
+      //   !REFERRALCODE2.includes(referral) &&
+      //   !REFERRALCODE1.includes(referral)
+      // ) {
+      //   throw new Error("Referral Code not valid");
+      // }
 
-  //     // const currentdate = new Date();
-  //     // const deadline = new Date("January 1,2022 23:59:59");
+      await instance.orders.create(options, function (err: any, order: any) {
+        if (err) throw new Error("Order Creation failed. Please Retry");
+        orderId = order.id;
+      });
+      if (orderId === "")
+        throw new Error("Order Creation failed. Please Retry");
 
-  //     var options = {
-  //       amount: Number(event.registrationfee) * 100,
-  //       currency: "INR",
-  //       receipt: user.shaastraID + "_" + event.name.slice(0, 24),
-  //     };
+      /* Store the details in database */
+      const order = await EventPay.create({
+        orderId,
+        amount: Number(options.amount),
+        event,
+        user,
+      }).save();
+      return { eventPay: order };
+    }
+  }
 
-  //     // if (
-  //     //   event.earlybidoffer &&
-  //     //   deadline.getTime() - currentdate.getTime() > 0
-  //     // ) {
-  //     //   options.amount = Number(event.earlybidoffer) * 100;
-  //     // }
-  //     if (referral && REFERRALCODE1.includes(referral)) {
-  //       options.amount = Math.round(0.95 * Number(event.registrationfee)) * 100;
-  //     } else if (
-  //       referral &&
-  //       REFERRALCODE2.includes(referral) &&
-  //       ENVOYEMAILS.includes(user.email)
-  //     ) {
-  //       options.amount = Math.round(0.9 * Number(event.registrationfee)) * 100;
-  //     } else if (
-  //       referral &&
-  //       REFERRALCODE2.includes(referral) &&
-  //       !ENVOYEMAILS.includes(user.email)
-  //     ) {
-  //       options.amount = Math.round(0.95 * Number(event.registrationfee)) * 100;
-  //     } else if (
-  //       referral &&
-  //       !REFERRALCODE2.includes(referral) &&
-  //       !REFERRALCODE1.includes(referral)
-  //     ) {
-  //       throw new Error("Referral Code not valid");
-  //     }
+  @Authorized()
+  @Mutation(() => Boolean)
+  async updateEventPay(
+    @Arg("data") data: UpdateEventPayInput,
+    @Arg("EventId") id: string,
+    @Ctx() { user }: MyContext,
+    @Arg("referral", { nullable: true }) referral?: string
+  ) {
+    try {
+      /* Verify the signature */
+      const body = data.orderId + "|" + data.payementId;
+      const expectedSignature = crypto
+        .createHmac("sha256", process.env.RAZORPAY_SECRET!)
+        .update(body.toString())
+        .digest("hex");
+      if (expectedSignature !== data.paymentSignature)
+        throw new Error("Invalid Payment Signature");
 
-  //     await instance.orders.create(options, function (err: any, order: any) {
-  //       if (err) throw new Error("Order Creation failed. Please Retry");
-  //       orderId = order.id;
-  //     });
-  //     if (orderId === "")
-  //       throw new Error("Order Creation failed. Please Retry");
+      /* Update the details in database */
+      const { affected } = await EventPay.update(
+        { orderId: data.orderId },
+        {
+          payementId: data.payementId,
+          paymentSignature: data.paymentSignature,
+          isPaid: true,
+          referralcode: referral,
+        }
+      );
+      if (affected !== 1) throw new Error("Update failed");
 
-  //     /* Store the details in database */
-  //     const order = await EventPay.create({
-  //       orderId,
-  //       amount: Number(options.amount),
-  //       event,
-  //       user,
-  //     }).save();
-  //     return { eventPay: order };
-  //   }
-  // }
+      /* Update the user details in registered users */
+      const event = await Event.findOneOrFail(id, {
+        relations: ["registeredUsers"],
+      });
+      event.registeredUsers.push(user);
+      await event.save();
+      await User.sendConfirmationMail({
+        name: user.name,
+        eventname: event.name,
+        email: user.email,
+      });
+      if (referral) {
+        var reff = JSON.stringify({
+          referalcode: referral,
+          coursename: event.name,
+        });
 
-  // @Authorized()
-  // @Mutation(() => Boolean)
-  // async updateEventPay(
-  //   @Arg("data") data: UpdateEventPayInput,
-  //   @Arg("EventId") id: string,
-  //   @Ctx() { user }: MyContext,
-  //   @Arg("referral", { nullable: true }) referral?: string
-  // ) {
-  //   try {
-  //     /* Verify the signature */
-  //     const body = data.orderId + "|" + data.payementId;
-  //     const expectedSignature = crypto
-  //       .createHmac("sha256", process.env.RAZORPAY_SECRET!)
-  //       .update(body.toString())
-  //       .digest("hex");
-  //     if (expectedSignature !== data.paymentSignature)
-  //       throw new Error("Invalid Payment Signature");
+        var refconfig = {
+          method: "post",
+          url: "https://sheet.best/api/sheets/f8d10436-8ee1-42ef-87ab-3e17a9c99d1c",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          data: reff,
+        };
 
-  //     /* Update the details in database */
-  //     const { affected } = await EventPay.update(
-  //       { orderId: data.orderId },
-  //       {
-  //         payementId: data.payementId,
-  //         paymentSignature: data.paymentSignature,
-  //         isPaid: true,
-  //         referralcode: referral,
-  //       }
-  //     );
-  //     if (affected !== 1) throw new Error("Update failed");
+        await axios(refconfig).catch(function (error: any) {
+          console.log(error);
+        });
+      }
+      var reqdata = JSON.stringify({
+        userId: user.id,
+      });
 
-  //     /* Update the user details in registered users */
-  //     const event = await Event.findOneOrFail(id, {
-  //       relations: ["registeredUsers"],
-  //     });
-  //     event.registeredUsers.push(user);
-  //     await event.save();
-  //     await User.sendConfirmationMail({
-  //       name: user.name,
-  //       eventname: event.name,
-  //       email: user.email,
-  //     });
-  //     if (referral) {
-  //       var reff = JSON.stringify({
-  //         referalcode: referral,
-  //         coursename: event.name,
-  //       });
+      var config = {
+        method: "post",
+        url: `https://mavex.in/api/events/${event.id}/registrations`,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        data: reqdata,
+      };
 
-  //       var refconfig = {
-  //         method: "post",
-  //         url: "https://sheet.best/api/sheets/f8d10436-8ee1-42ef-87ab-3e17a9c99d1c",
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //         },
-  //         data: reff,
-  //       };
+      await axios(config)
+        .then(function (response: any) {
+          console.log(JSON.stringify(response.data));
+        })
+        .catch(function (error: any) {
+          console.log(error);
+        });
 
-  //       await axios(refconfig).catch(function (error: any) {
-  //         console.log(error);
-  //       });
-  //     }
-  //     var reqdata = JSON.stringify({
-  //       userId: user.id,
-  //     });
+      return !!event;
+    } catch (e) {
+      throw new Error(e);
+    }
+  }
 
-  //     var config = {
-  //       method: "post",
-  //       url: `https://mavex.in/api/events/${event.id}/registrations`,
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //       },
-  //       data: reqdata,
-  //     };
+  @Authorized()
+  @Mutation(() => RegisterOutput)
+  async ComboOffer(
+    @Arg("combo") combo: string,
+    @Ctx() { user }: MyContext,
+    @Arg("workshopsIDs", () => [String], { nullable: true })
+    workshopsID: string[],
+    @Arg("TShirtsDetails", { nullable: true }) tShirtsDetails?: TShirtsDetails,
+    @Arg("referral", { nullable: true }) referral?: string
+  ) {
+    console.log(referral, tShirtsDetails)
+    var combodetails;
+    if (combo === "AI Combo") {
+      combodetails = {
+        fee: 1300,
+        events: [
+          "ckxentwt1000w1up7gi013e4e",
+          "ckxekc92m000c1up72t0h4h45",
+          "ckxen074m000p1up7bo0q5l17",
+        ],
+      };
+    } else if (combo === "Robotics Combo") {
+      combodetails = {
+        fee: 1300,
+        events: [
+          "ckxemw5oi000o2bp77xtg9v0f",
+          "ckxf1ihnv003ccup7d2bn7a67",
+          "ckxezxg8v0030dbp7e8xq13uw",
+        ],
+      };
+    } else if (combo === "Data Science Combo") {
+      combodetails = {
+        fee: 1200,
+        events: [
+          "ckxepglch00122bp7gjk52d0i",
+          "ckxenjobj000u1up75tsph890",
+          "ckxf22vta003kcup79stiedlw",
+        ],
+      };
+    } else if (combo === "Cybermatic Combo") {
+      combodetails = {
+        fee: 1200,
+        events: [
+          "ckxexs6fl002fcup7hcrld72v",
+          "ckxey7kfz0029dbp70sqbcovb",
+          "ckxewph1e001hcup72ls1hrjx",
+        ],
+      };
+    } else if (combo === "Electronic Combo") {
+      combodetails = {
+        fee: 1200,
+        events: [
+          "ckxepp6pj00182bp7h5790jnr",
+          "ckxbr05w00004c9p74mji2rgd",
+          "ckxen40g6000q2bp7924y6qrm",
+        ],
+      };
+    } else if (combo === "Management Workshops") {
+      combodetails = {
+        fee: 800,
+        events: ["ckxnilxyt000j0bp7d9gp9a7e", "ckxevm6oi000gcup70lp17fa1"],
+      };
+    } else if (combo === "Mayhem Combo") {
+      if (workshopsID.length !== 2) throw new Error("Invalid Registrations");
+      combodetails = {
+        fee: 1049,
+        events: workshopsID,
+        shirts: true,
+      };
+    }
+    if (!user) throw new Error("Login to Register");
+    var flag = 0;
+    await Promise.all(
+      combodetails?.events.map(async (eve) => {
+        const event = await Event.findOne(eve, {
+          relations: ["registeredUsers"],
+        });
+        const userF = event?.registeredUsers.filter(
+          (useR) => useR.id === user.id
+        );
+        if (userF?.length === 1) {
+          flag = 1;
+        }
+        console.log("Error Here");
+      })!
+    );
+    if (flag) {
+      throw new Error("User Already registered in one of the workshop");
+    }
+    /* Create the order id */
+    let orderId: string = "";
 
-  //     await axios(config)
-  //       .then(function (response: any) {
-  //         console.log(JSON.stringify(response.data));
-  //       })
-  //       .catch(function (error: any) {
-  //         console.log(error);
-  //       });
+    var options = {
+      amount: combodetails?.fee! * 100,
+      currency: "INR",
+      receipt: user.shaastraID + combo,
+    };
+    // if (referral && REFERRALCODE1.includes(referral)) {
+    //   options.amount = Math.round(0.95 * Number(combodetails?.fee!)) * 100;
+    // } else if (
+    //   referral &&
+    //   REFERRALCODE2.includes(referral) &&
+    //   ENVOYEMAILS.includes(user.email)
+    // ) {
+    //   options.amount = Math.round(0.9 * Number(combodetails?.fee!)) * 100;
+    // } else if (
+    //   referral &&
+    //   REFERRALCODE2.includes(referral) &&
+    //   !ENVOYEMAILS.includes(user.email)
+    // ) {
+    //   options.amount = Math.round(0.95 * Number(combodetails?.fee!)) * 100;
+    // } else if (
+    //   referral &&
+    //   !REFERRALCODE2.includes(referral) &&
+    //   !REFERRALCODE1.includes(referral)
+    // ) {
+    //   throw new Error("Referral Code not valid");
+    // }
 
-  //     return !!event;
-  //   } catch (e) {
-  //     throw new Error(e);
-  //   }
-  // }
+    await instance.orders.create(options, function (err: any, order: any) {
+      if (err) throw new Error("Order Creation failed. Please Retry");
+      orderId = order.id;
+    });
 
-  // @Authorized()
-  // @Mutation(() => RegisterOutput)
-  // async ComboOffer(
-  //   @Arg("combo") combo: string,
-  //   @Ctx() { user }: MyContext,
-  //   @Arg("workshopsIDs", () => [String], { nullable: true })
-  //   workshopsID: string[],
-  //   @Arg("TShirtsDetails", { nullable: true }) tShirtsDetails?: TShirtsDetails,
-  //   @Arg("referral", { nullable: true }) referral?: string
-  // ) {
-  //   var combodetails;
-  //   if (combo === "AI Combo") {
-  //     combodetails = {
-  //       fee: 1300,
-  //       events: [
-  //         "ckxentwt1000w1up7gi013e4e",
-  //         "ckxekc92m000c1up72t0h4h45",
-  //         "ckxen074m000p1up7bo0q5l17",
-  //       ],
-  //     };
-  //   } else if (combo === "Robotics Combo") {
-  //     combodetails = {
-  //       fee: 1300,
-  //       events: [
-  //         "ckxemw5oi000o2bp77xtg9v0f",
-  //         "ckxf1ihnv003ccup7d2bn7a67",
-  //         "ckxezxg8v0030dbp7e8xq13uw",
-  //       ],
-  //     };
-  //   } else if (combo === "Data Science Combo") {
-  //     combodetails = {
-  //       fee: 1200,
-  //       events: [
-  //         "ckxepglch00122bp7gjk52d0i",
-  //         "ckxenjobj000u1up75tsph890",
-  //         "ckxf22vta003kcup79stiedlw",
-  //       ],
-  //     };
-  //   } else if (combo === "Cybermatic Combo") {
-  //     combodetails = {
-  //       fee: 1200,
-  //       events: [
-  //         "ckxexs6fl002fcup7hcrld72v",
-  //         "ckxey7kfz0029dbp70sqbcovb",
-  //         "ckxewph1e001hcup72ls1hrjx",
-  //       ],
-  //     };
-  //   } else if (combo === "Electronic Combo") {
-  //     combodetails = {
-  //       fee: 1200,
-  //       events: [
-  //         "ckxepp6pj00182bp7h5790jnr",
-  //         "ckxbr05w00004c9p74mji2rgd",
-  //         "ckxen40g6000q2bp7924y6qrm",
-  //       ],
-  //     };
-  //   } else if (combo === "Management Workshops") {
-  //     combodetails = {
-  //       fee: 800,
-  //       events: ["ckxnilxyt000j0bp7d9gp9a7e", "ckxevm6oi000gcup70lp17fa1"],
-  //     };
-  //   } else if (combo === "Mayhem Combo") {
-  //     if (workshopsID.length !== 2) throw new Error("Invalid Registrations");
-  //     combodetails = {
-  //       fee: 1049,
-  //       events: workshopsID,
-  //       shirts: true,
-  //     };
-  //   }
-  //   if (!user) throw new Error("Login to Register");
-  //   var flag = 0;
-  //   await Promise.all(
-  //     combodetails?.events.map(async (eve) => {
-  //       const event = await Event.findOne(eve, {
-  //         relations: ["registeredUsers"],
-  //       });
-  //       const userF = event?.registeredUsers.filter(
-  //         (useR) => useR.id === user.id
-  //       );
-  //       if (userF?.length === 1) {
-  //         flag = 1;
-  //       }
-  //       console.log("Error Here");
-  //     })!
-  //   );
-  //   if (flag) {
-  //     throw new Error("User Already registered in one of the workshop");
-  //   }
-  //   /* Create the order id */
-  //   let orderId: string = "";
+    if (orderId === "") throw new Error("Order Creation failed. Please Retry");
 
-  //   var options = {
-  //     amount: combodetails?.fee! * 100,
-  //     currency: "INR",
-  //     receipt: user.shaastraID + combo,
-  //   };
-  //   if (referral && REFERRALCODE1.includes(referral)) {
-  //     options.amount = Math.round(0.95 * Number(combodetails?.fee!)) * 100;
-  //   } else if (
-  //     referral &&
-  //     REFERRALCODE2.includes(referral) &&
-  //     ENVOYEMAILS.includes(user.email)
-  //   ) {
-  //     options.amount = Math.round(0.9 * Number(combodetails?.fee!)) * 100;
-  //   } else if (
-  //     referral &&
-  //     REFERRALCODE2.includes(referral) &&
-  //     !ENVOYEMAILS.includes(user.email)
-  //   ) {
-  //     options.amount = Math.round(0.95 * Number(combodetails?.fee!)) * 100;
-  //   } else if (
-  //     referral &&
-  //     !REFERRALCODE2.includes(referral) &&
-  //     !REFERRALCODE1.includes(referral)
-  //   ) {
-  //     throw new Error("Referral Code not valid");
-  //   }
+    /* Store the details in database */
+    await Promise.all(
+      combodetails?.events.map(async (eve) => {
+        const event = await Event.findOne(eve, {
+          relations: ["registeredUsers"],
+        });
+        await EventPay.create({
+          orderId,
+          amount: Math.round(Number(options.amount) / 3),
+          event,
+          user,
+        }).save();
+      })!
+    );
+    // if (combodetails?.shirts)
+    //   await TShirt.create({
+    //     name: user.name,
+    //     email: user.email,
+    //     mobile: user.mobile,
+    //     shaastraID: user.shaastraID,
+    //     orderId,
+    //     ...tShirtsDetails,
+    //   }).save()
+    return {
+      eventPay: {
+        orderId,
+        user,
+        amount: options.amount,
+      },
+    };
+  }
 
-  //   await instance.orders.create(options, function (err: any, order: any) {
-  //     if (err) throw new Error("Order Creation failed. Please Retry");
-  //     orderId = order.id;
-  //   });
+  @Authorized()
+  @Mutation(() => Boolean)
+  async ComboupdateEventPay(
+    @Arg("data") data: UpdateEventPayInput,
+    @Ctx() { user }: MyContext,
+    @Arg("referral", { nullable: true }) referral?: string
+  ) {
+    try {
+      /* Verify the signature */
+      const body = data.orderId + "|" + data.payementId;
+      const expectedSignature = crypto
+        .createHmac("sha256", process.env.RAZORPAY_SECRET!)
+        .update(body.toString())
+        .digest("hex");
+      if (expectedSignature !== data.paymentSignature)
+        throw new Error("Invalid Payment Signature");
 
-  //   if (orderId === "") throw new Error("Order Creation failed. Please Retry");
+      /* Update the details in database */
+      const eventpay = await EventPay.find({
+        where: { orderId: data.orderId },
+        relations: ["event"],
+      });
 
-  //   /* Store the details in database */
-  //   await Promise.all(
-  //     combodetails?.events.map(async (eve) => {
-  //       const event = await Event.findOne(eve, {
-  //         relations: ["registeredUsers"],
-  //       });
-  //       await EventPay.create({
-  //         orderId,
-  //         amount: Math.round(Number(options.amount) / 3),
-  //         event,
-  //         user,
-  //       }).save();
-  //     })!
-  //   );
-  //   if (combodetails?.shirts)
-  //     await TShirt.create({
-  //       name: user.name,
-  //       email: user.email,
-  //       mobile: user.mobile,
-  //       shaastraID: user.shaastraID,
-  //       orderId,
-  //       ...tShirtsDetails,
-  //     }).save();
-  //   return {
-  //     eventPay: {
-  //       orderId,
-  //       user,
-  //       amount: options.amount,
-  //     },
-  //   };
-  // }
+      await Promise.all(
+        eventpay.map(async (eve) => {
+          (eve.isPaid = true),
+            (eve.payementId = data.payementId),
+            (eve.paymentSignature = data.paymentSignature),
+            referral ? (eve.referralcode = referral + " combo") : null,
+            await eve.save();
+        })
+      ).catch(() => {
+        throw new Error("Update failed");
+      });
 
-  // @Authorized()
-  // @Mutation(() => Boolean)
-  // async ComboupdateEventPay(
-  //   @Arg("data") data: UpdateEventPayInput,
-  //   @Ctx() { user }: MyContext,
-  //   @Arg("referral", { nullable: true }) referral?: string
-  // ) {
-  //   try {
-  //     /* Verify the signature */
-  //     const body = data.orderId + "|" + data.payementId;
-  //     const expectedSignature = crypto
-  //       .createHmac("sha256", process.env.RAZORPAY_SECRET!)
-  //       .update(body.toString())
-  //       .digest("hex");
-  //     if (expectedSignature !== data.paymentSignature)
-  //       throw new Error("Invalid Payment Signature");
+      const tShirtOrderCount = await TShirt.count({
+        where: { orderId: data.orderId },
+      });
+      if (tShirtOrderCount === 1) {
+        const tShirtOrder = await TShirt.findOne({
+          where: { orderId: data.orderId },
+        });
+        tShirtOrder!.payementId = data.payementId;
+        tShirtOrder!.paymentSignature = data.paymentSignature;
+        tShirtOrder!.isPaid = true;
+        await tShirtOrder?.save();
+        await User.sendConfirmationMail({
+          name: user.name,
+          eventname: "t-shirt",
+          email: user.email,
+        });
+      }
 
-  //     /* Update the details in database */
-  //     const eventpay = await EventPay.find({
-  //       where: { orderId: data.orderId },
-  //       relations: ["event"],
-  //     });
+      if (referral) {
+        var reff = JSON.stringify({
+          referalcode: referral,
+          coursename: "Combo offer",
+        });
+        var refconfig = {
+          method: "post",
+          url: "https://sheet.best/api/sheets/f8d10436-8ee1-42ef-87ab-3e17a9c99d1c",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          data: reff,
+        };
 
-  //     await Promise.all(
-  //       eventpay.map(async (eve) => {
-  //         (eve.isPaid = true),
-  //           (eve.payementId = data.payementId),
-  //           (eve.paymentSignature = data.paymentSignature),
-  //           referral ? (eve.referralcode = referral + " combo") : null,
-  //           await eve.save();
-  //       })
-  //     ).catch(() => {
-  //       throw new Error("Update failed");
-  //     });
+        await axios(refconfig).catch(function (error: any) {
+          console.log(error);
+        });
+      }
 
-  //     const tShirtOrderCount = await TShirt.count({
-  //       where: { orderId: data.orderId },
-  //     });
-  //     if (tShirtOrderCount === 1) {
-  //       const tShirtOrder = await TShirt.findOne({
-  //         where: { orderId: data.orderId },
-  //       });
-  //       tShirtOrder!.payementId = data.payementId;
-  //       tShirtOrder!.paymentSignature = data.paymentSignature;
-  //       tShirtOrder!.isPaid = true;
-  //       await tShirtOrder?.save();
-  //       await User.sendConfirmationMail({
-  //         name: user.name,
-  //         eventname: "t-shirt",
-  //         email: user.email,
-  //       });
-  //     }
+      /* Update the user details in registered users */
+      await Promise.all(
+        eventpay.map(async (eve) => {
+          const event = await Event.findOneOrFail(eve.event.id, {
+            relations: ["registeredUsers"],
+          });
+          event.registeredUsers.push(user);
+          await event.save();
+          await User.sendConfirmationMail({
+            name: user.name,
+            eventname: event.name,
+            email: user.email,
+          });
+          var reqdata = JSON.stringify({
+            userId: user.id,
+          });
 
-  //     if (referral) {
-  //       var reff = JSON.stringify({
-  //         referalcode: referral,
-  //         coursename: "Combo offer",
-  //       });
-  //       var refconfig = {
-  //         method: "post",
-  //         url: "https://sheet.best/api/sheets/f8d10436-8ee1-42ef-87ab-3e17a9c99d1c",
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //         },
-  //         data: reff,
-  //       };
+          var config = {
+            method: "post",
+            url: `https://mavex.in/api/events/${event.id}/registrations`,
+            headers: {
+              "Content-Type": "application/json",
+            },
+            data: reqdata,
+          };
 
-  //       await axios(refconfig).catch(function (error: any) {
-  //         console.log(error);
-  //       });
-  //     }
+          await axios(config)
+            .then(function (response: any) {
+              console.log(JSON.stringify(response.data));
+            })
+            .catch(function (error: any) {
+              console.log(error);
+            });
+        })
+      );
+      return true;
+    } catch (e) {
+      throw new Error(e);
+    }
+  }
 
-  //     /* Update the user details in registered users */
-  //     await Promise.all(
-  //       eventpay.map(async (eve) => {
-  //         const event = await Event.findOneOrFail(eve.event.id, {
-  //           relations: ["registeredUsers"],
-  //         });
-  //         event.registeredUsers.push(user);
-  //         await event.save();
-  //         await User.sendConfirmationMail({
-  //           name: user.name,
-  //           eventname: event.name,
-  //           email: user.email,
-  //         });
-  //         var reqdata = JSON.stringify({
-  //           userId: user.id,
-  //         });
+  @Authorized()
+  @Mutation(() => RegisterOutput)
+  async registerRecording(
+    @Arg("offerType") offerType: string,
+    @Ctx() { user }: MyContext,
+    @Arg("workshopsIDs", () => [String])
+    workshopsID: string[],
+    @Arg("TShirtsDetails", { nullable: true }) tShirtsDetails?: TShirtsDetails,
+  ) {
+    var combodetails;
+    if (offerType === "WORKSHOP") {
+      if(workshopsID[0] === '') throw new Error("Please select a Workshop");
+      combodetails = {
+        fee: 400,
+      };
+    } else if (offerType === "3_WORKSHOPS") {
+      if(workshopsID[0] === '' || workshopsID[1] === '' || workshopsID[2] === '' ) throw new Error("Please select 3 Workshops")
+      combodetails = {
+        fee: 999,
+      };
+    }else if (offerType === "T_shirt") {
+      combodetails = {
+        fee: 999,
+      };
+    }
+    if (!user) throw new Error("Login to Register");
+    var flag = 0;
+    await Promise.all(
+      workshopsID.map(async (eve) => {
+        const event = await Event.findOne(eve, {
+          relations: ["recordingUsers"],
+        });
+        const userF = event?.recordingUsers.filter(
+          (useR) => useR.id === user.id
+        );
+        if (userF?.length === 1) {
+          flag = 1;
+        }
+      })!
+    );
+    if (flag) {
+      throw new Error("User Already registered in one of the workshop");
+    }
+    /* Create the order id */
+    let orderId: string = "";
 
-  //         var config = {
-  //           method: "post",
-  //           url: `https://mavex.in/api/events/${event.id}/registrations`,
-  //           headers: {
-  //             "Content-Type": "application/json",
-  //           },
-  //           data: reqdata,
-  //         };
+    var options = {
+      amount: combodetails?.fee! * 100,
+      currency: "INR",
+      receipt: user.shaastraID + offerType,
+    };
 
-  //         await axios(config)
-  //           .then(function (response: any) {
-  //             console.log(JSON.stringify(response.data));
-  //           })
-  //           .catch(function (error: any) {
-  //             console.log(error);
-  //           });
-  //       })
-  //     );
-  //     return true;
-  //   } catch (e) {
-  //     throw new Error(e);
-  //   }
-  // }
+    await instance.orders.create(options, function (err: any, order: any) {
+      if (err) throw new Error("Order Creation failed. Please Retry");
+      orderId = order.id;
+    });
 
-  // @Authorized()
-  // @Mutation(() => RegisterOutput)
-  // async registerRecording(
-  //   @Arg("offerType") offerType: string,
-  //   @Ctx() { user }: MyContext,
-  //   @Arg("workshopsIDs", () => [String])
-  //   workshopsID: string[],
-  //   @Arg("TShirtsDetails", { nullable: true }) tShirtsDetails?: TShirtsDetails,
-  // ) {
-  //   var combodetails;
-  //   if (offerType === "WORKSHOP") {
-  //     if(workshopsID[0] === '') throw new Error("Please select a Workshop");
-  //     combodetails = {
-  //       fee: 400,
-  //     };
-  //   } else if (offerType === "3_WORKSHOPS") {
-  //     if(workshopsID[0] === '' || workshopsID[1] === '' || workshopsID[2] === '' ) throw new Error("Please select 3 Workshops")
-  //     combodetails = {
-  //       fee: 999,
-  //     };
-  //   }else if (offerType === "T_shirt") {
-  //     combodetails = {
-  //       fee: 999,
-  //     };
-  //   }
-  //   if (!user) throw new Error("Login to Register");
-  //   var flag = 0;
-  //   await Promise.all(
-  //     workshopsID.map(async (eve) => {
-  //       const event = await Event.findOne(eve, {
-  //         relations: ["recordingUsers"],
-  //       });
-  //       const userF = event?.recordingUsers.filter(
-  //         (useR) => useR.id === user.id
-  //       );
-  //       if (userF?.length === 1) {
-  //         flag = 1;
-  //       }
-  //     })!
-  //   );
-  //   if (flag) {
-  //     throw new Error("User Already registered in one of the workshop");
-  //   }
-  //   /* Create the order id */
-  //   let orderId: string = "";
+    if (orderId === "") throw new Error("Order Creation failed. Please Retry");
 
-  //   var options = {
-  //     amount: combodetails?.fee! * 100,
-  //     currency: "INR",
-  //     receipt: user.shaastraID + offerType,
-  //   };
-
-  //   await instance.orders.create(options, function (err: any, order: any) {
-  //     if (err) throw new Error("Order Creation failed. Please Retry");
-  //     orderId = order.id;
-  //   });
-
-  //   if (orderId === "") throw new Error("Order Creation failed. Please Retry");
-
-  //   /* Store the details in database */
-  //   await Promise.all(
-  //     workshopsID.map(async (eve) => {
-  //       const event = await Event.findOne(eve, {
-  //         relations: ["recordingUsers"],
-  //       });
-  //       const a = await EventPay.create({
-  //         orderId,
-  //         amount: Math.round(Number(options.amount) / 3),
-  //         recording: event,
-  //         recordingUser: user,
-  //       }).save();
-  //       console.log(a);
-  //     })!
-  //   );
-  //   if(tShirtsDetails){
-  //     await TShirt.create({
-  //       name: user.name,
-  //       email: user.email,
-  //       mobile: user.mobile,
-  //       shaastraID: user.shaastraID,
-  //       orderId,
-  //       ...tShirtsDetails,
-  //     }).save();
+    /* Store the details in database */
+    await Promise.all(
+      workshopsID.map(async (eve) => {
+        const event = await Event.findOne(eve, {
+          relations: ["recordingUsers"],
+        });
+        const a = await EventPay.create({
+          orderId,
+          amount: Math.round(Number(options.amount) / 3),
+          recording: event,
+          recordingUser: user,
+        }).save();
+        console.log(a);
+      })!
+    );
+    if(tShirtsDetails){
+      await TShirt.create({
+        name: user.name,
+        email: user.email,
+        mobile: user.mobile,
+        shaastraID: user.shaastraID,
+        orderId,
+        ...tShirtsDetails,
+      }).save();
       
-  //   }
-  //   return {
-  //     eventPay: {
-  //       orderId,
-  //       user,
-  //       amount: options.amount,
-  //     },
-  //   };
-  // }
+    }
+    return {
+      eventPay: {
+        orderId,
+        user,
+        amount: options.amount,
+      },
+    };
+  }
 
-  // @Authorized()
-  // @Mutation(() => Boolean)
-  // async updateRecordingPay(
-  //   @Arg("data") data: UpdateEventPayInput,
-  //   @Ctx() { user }: MyContext
-  // ) {
-  //   try {
-  //     /* Verify the signature */
-  //     const body = data.orderId + "|" + data.payementId;
-  //     const expectedSignature = crypto
-  //       .createHmac("sha256", process.env.RAZORPAY_SECRET!)
-  //       .update(body.toString())
-  //       .digest("hex");
-  //     if (expectedSignature !== data.paymentSignature)
-  //       throw new Error("Invalid Payment Signature");
+  @Authorized()
+  @Mutation(() => Boolean)
+  async updateRecordingPay(
+    @Arg("data") data: UpdateEventPayInput,
+    @Ctx() { user }: MyContext
+  ) {
+    try {
+      /* Verify the signature */
+      const body = data.orderId + "|" + data.payementId;
+      const expectedSignature = crypto
+        .createHmac("sha256", process.env.RAZORPAY_SECRET!)
+        .update(body.toString())
+        .digest("hex");
+      if (expectedSignature !== data.paymentSignature)
+        throw new Error("Invalid Payment Signature");
 
-  //     /* Update the details in database */
-  //     const eventpay = await EventPay.find({
-  //       where: { orderId: data.orderId },
-  //       relations: ["recording"],
-  //     });
-  //     await Promise.all(
-  //       eventpay.map(async (eve) => {
-  //         eve.isPaid = true;
-  //         eve.payementId = data.payementId;
-  //         eve.paymentSignature = data.paymentSignature;
-  //         await eve.save();
+      /* Update the details in database */
+      const eventpay = await EventPay.find({
+        where: { orderId: data.orderId },
+        relations: ["recording"],
+      });
+      await Promise.all(
+        eventpay.map(async (eve) => {
+          eve.isPaid = true;
+          eve.payementId = data.payementId;
+          eve.paymentSignature = data.paymentSignature;
+          await eve.save();
 
-  //         const event = await Event.findOneOrFail(eve.recording.id, {
-  //           relations: ["recordingUsers"],
-  //         });
-  //         event.recordingUsers.push(user);
-  //         await event.save();
-  //       })
-  //     )
-  //     const tShirtOrderCount = await TShirt.count({
-  //       where: { orderId: data.orderId },
-  //     });
-  //     if (tShirtOrderCount === 1) {
-  //       const tShirtOrder = await TShirt.findOne({
-  //         where: { orderId: data.orderId },
-  //       });
-  //       tShirtOrder!.payementId = data.payementId;
-  //       tShirtOrder!.paymentSignature = data.paymentSignature;
-  //       tShirtOrder!.isPaid = true;
-  //       tShirtOrder!.remarks = "Workshop Recording Combo"
-  //       await tShirtOrder?.save();
-  //       await User.sendConfirmationMail({
-  //         name: user.name,
-  //         eventname: "t-shirt",
-  //         email: user.email,
-  //       });
-  //     }
-  //     return true;
-  //   } catch (e) {
-  //     throw new Error(e);
-  //   }
-  // }
+          const event = await Event.findOneOrFail(eve.recording.id, {
+            relations: ["recordingUsers"],
+          });
+          event.recordingUsers.push(user);
+          await event.save();
+        })
+      )
+      const tShirtOrderCount = await TShirt.count({
+        where: { orderId: data.orderId },
+      });
+      if (tShirtOrderCount === 1) {
+        const tShirtOrder = await TShirt.findOne({
+          where: { orderId: data.orderId },
+        });
+        tShirtOrder!.payementId = data.payementId;
+        tShirtOrder!.paymentSignature = data.paymentSignature;
+        tShirtOrder!.isPaid = true;
+        tShirtOrder!.remarks = "Workshop Recording Combo"
+        await tShirtOrder?.save();
+        await User.sendConfirmationMail({
+          name: user.name,
+          eventname: "t-shirt",
+          email: user.email,
+        });
+      }
+      return true;
+    } catch (e) {
+      throw new Error(e);
+    }
+  }
 
   @Query(() => GetEventsOutput)
   async getEvents(

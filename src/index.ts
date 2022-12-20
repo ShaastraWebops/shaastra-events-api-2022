@@ -19,10 +19,17 @@ const main = async () =>{
 
     await createConnection({
         type : "postgres",
-        url : "postgresql://postgres:postgres@localhost:5433/sh23",
+        url : "postgresql://doadmin:AVNS_5jud4g1Rwrrfl6Hg0vZ@shaastra-do-user-7555493-0.b.db.ondigitalocean.com:25060/defaultdb",
         entities,
         synchronize : true,
-        logging : true
+        logging: true,
+        ssl: true,
+        extra: {
+          ssl: {
+            ca: process.env.cert,
+            rejectUnauthorized: false,
+          }
+        }
      })
       .then(() => {
         console.log('Database Connected');
