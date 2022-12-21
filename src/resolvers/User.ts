@@ -11,7 +11,7 @@ import { parse } from "json2csv";
 import dotenv from "dotenv";
 
 dotenv.config();
-const axios = require('axios')
+// const axios = require('axios')
 
 
 @ObjectType("GetUsersOutput")
@@ -44,6 +44,8 @@ export class UserResolver {
         }
         let token = jwt.sign({ id: user.id }, process.env.JWT_SECRET || "secret");
         res.cookie("token", token )
+
+        console.log(token)
         
         return !!user;
     }
@@ -53,29 +55,29 @@ export class UserResolver {
       if (user?.verificationOTP !== otp) throw new Error("Invalid OTP!");
       await User.update(user.id, { isVerified: true });
     
-      var data = JSON.stringify({
-        "id": user.id,
-        "name": user.name,
-        "email": user.email,
-        "password": user.password
-      });
+      // var data = JSON.stringify({
+      //   "id": user.id,
+      //   "name": user.name,
+      //   "email": user.email,
+      //   "password": user.password
+      // });
       
-      var config = {
-        method: 'post',
-        url: 'https://mavex.in/api/users/registration',
-        headers: { 
-          'Content-Type': 'application/json'
-        },
-        data : data
-      };
+      // var config = {
+      //   method: 'post',
+      //   url: 'https://mavex.in/api/users/registration',
+      //   headers: { 
+      //     'Content-Type': 'application/json'
+      //   },
+      //   data : data
+      // };
       
-      await axios(config)
-      .then(function (response : any) {
-        console.log(JSON.stringify(response.data));
-      })
-      .catch(function (error : any) {
-        console.log(error);
-      });
+      // await axios(config)
+      // .then(function (response : any) {
+      //   console.log(JSON.stringify(response.data));
+      // })
+      // .catch(function (error : any) {
+      //   console.log(error);
+      // });
     
       return !!user;
     }
