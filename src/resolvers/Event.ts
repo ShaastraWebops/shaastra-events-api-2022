@@ -415,6 +415,13 @@ export class EventResolver {
         events: workshopsID,
       }
     }
+    else if (combo==="Phantom Combo") {
+      if (workshopsID.length!==2) throw new Error("Invalid Registration");
+      combodetails= {
+        fee: 1399,
+        events: workshopsID,
+      }
+    }
     if (!user) throw new Error("Login to Register");
     var flag = 0;
     await Promise.all(
