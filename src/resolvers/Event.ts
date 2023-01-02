@@ -18,7 +18,7 @@ import {
   Root,
 } from "type-graphql";
 import {
-  
+
   RegistraionType,
   Vertical,
 } from "../utils";
@@ -401,13 +401,26 @@ export class EventResolver {
         fee: 800,
         events: ["ckxnilxyt000j0bp7d9gp9a7e", "ckxevm6oi000gcup70lp17fa1"],
       };
-    } else if (combo === "Mayhem Combo") {
-      if (workshopsID.length !== 2) throw new Error("Invalid Registrations");
+    } else if (combo === "Merry Combo") {
+      if (workshopsID.length !== 2) throw new Error("Invalid Registration");
       combodetails = {
-        fee: 1049,
+        fee: 999,
         events: workshopsID,
         shirts: true,
       };
+    } else if (combo==="Mayhem Combo") {
+      if (workshopsID.length!== 3) throw new Error("Invalid Registration");
+      combodetails= {
+        fee: 1199,
+        events: workshopsID,
+      }
+    }
+    else if (combo==="Phantom Combo") {
+      if (workshopsID.length!==2) throw new Error("Invalid Registration");
+      combodetails= {
+        fee: 1399,
+        events: workshopsID,
+      }
     }
     if (!user) throw new Error("Login to Register");
     var flag = 0;
@@ -436,6 +449,7 @@ export class EventResolver {
       currency: "INR",
       receipt: user.shaastraID + combo,
     };
+    console.log(options.amount!);
     // if (referral && REFERRALCODE1.includes(referral)) {
     //   options.amount = Math.round(0.95 * Number(combodetails?.fee!)) * 100;
     // } else if (
@@ -479,15 +493,15 @@ export class EventResolver {
         }).save();
       })!
     );
-    // if (combodetails?.shirts)
-    //   await TShirt.create({
-    //     name: user.name,
-    //     email: user.email,
-    //     mobile: user.mobile,
-    //     shaastraID: user.shaastraID,
-    //     orderId,
-    //     ...tShirtsDetails,
-    //   }).save()
+    if (combodetails?.shirts)
+      await TShirt.create({
+        name: user.name,
+        email: user.email,
+        mobile: user.mobile,
+        shaastraID: user.shaastraID,
+        orderId,
+        ...tShirtsDetails,
+      }).save()
     return {
       eventPay: {
         orderId,
@@ -693,7 +707,7 @@ export class EventResolver {
         orderId,
         ...tShirtsDetails,
       }).save();
-      
+
     }
     return {
       eventPay: {
@@ -835,10 +849,9 @@ export class EventResolver {
     return csv;
   }
 
-  @Authorized(["ADMIN"])
   @Query(() => Number)
-  async getPaidUsersCount(@Root() { id }: Event) {
-    return await EventPay.count({ where: { isPaid: true, event: id } });
+  async getPaidUsersCount() {
+    return await EventPay.count({ where: { isPaid: true, event: "clc7udku5000270vzfjm59b5p" } });
   }
 
   @Authorized(["ADMIN"])
@@ -866,7 +879,7 @@ export class EventResolver {
   @Authorized(["ADMIN"])
   @Query(() => String)
   async recordingUsersCSV(@Arg("EventID") id: string) {
-  
+
     const eventRepository = getRepository(Event);
 
       let csv;
@@ -885,7 +898,7 @@ export class EventResolver {
         .execute();
 
       csv = parse(registeredUsers);
-      
+
       return csv;
   }
 
@@ -923,7 +936,7 @@ export class EventResolver {
     const event = await Event.findOneOrFail(id, {
       relations: ["recordingUsers"],
     });
-  
+
     return event.recordingUsers.length;
   }
 
