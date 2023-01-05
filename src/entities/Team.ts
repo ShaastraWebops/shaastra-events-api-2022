@@ -32,7 +32,7 @@ export class Team extends BaseEntity {
        body = `Hello <b>${name}</b>,<br><br>
     Your registration for  <strong>${eventname}</strong> is successful <br> Team name : <strong>${teamname}</strong>
     <br>Team members : <br>` + `<strong> ${memberS} </strong>`;
-      await mail({ email, sub: "Registration Successful |  Shaastra- 2022", body });
+      await mail({ email, sub: "Registration Successful |  Shaastra- 2023", body });
     }
 
     @BeforeInsert()
