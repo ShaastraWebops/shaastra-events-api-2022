@@ -264,7 +264,7 @@ export class EventResolver {
       /* Verify the signature */
       const body = data.orderId + "|" + data.payementId;
       const expectedSignature = crypto
-        .createHmac("sha256", process.env.RAZORPAY_SECRET!)
+        .createHmac("sha256", "bS0MWKA0RKv0VS3QGneUd6XU")
         .update(body.toString())
         .digest("hex");
       if (expectedSignature !== data.paymentSignature)
@@ -522,7 +522,7 @@ export class EventResolver {
       /* Verify the signature */
       const body = data.orderId + "|" + data.payementId;
       const expectedSignature = crypto
-        .createHmac("sha256", process.env.RAZORPAY_SECRET!)
+        .createHmac("sha256", "bS0MWKA0RKv0VS3QGneUd6XU")
         .update(body.toString())
         .digest("hex");
       if (expectedSignature !== data.paymentSignature)
@@ -728,7 +728,7 @@ export class EventResolver {
       /* Verify the signature */
       const body = data.orderId + "|" + data.payementId;
       const expectedSignature = crypto
-        .createHmac("sha256", process.env.RAZORPAY_SECRET!)
+        .createHmac("sha256", "bS0MWKA0RKv0VS3QGneUd6XU")
         .update(body.toString())
         .digest("hex");
       if (expectedSignature !== data.paymentSignature)
