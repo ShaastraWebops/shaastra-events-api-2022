@@ -797,7 +797,6 @@ export class EventResolver {
     return event;
   }
 
-  @Authorized(["ADMIN"])
   @Query(() => String)
   async exportCSV(@Arg("EventID") id: string) {
     const event = await Event.findOneOrFail(id);
@@ -847,6 +846,19 @@ export class EventResolver {
     }
 
     return csv;
+  }
+
+  @Query(()=> String)
+  async getPAIDCSV() {
+    try {
+      const payrepo= getRepository(EventPay);
+      const users= await payrepo.createQueryBuilder("payment").leftJoinAndSelect("payment.event", "event").leftJoinAndSelect("payment.user", "user").select(["payment.id", "payment.amount", "payment.payementId" ,"payment.orderId", "payment.paymentSignature", "payment.isPaid", "event.id", "event.name", "user.shaastraID", "user.email", "user.id"]).execute();
+      let csv= parse(users);
+      return csv;
+    }
+    catch(error){
+      throw new Error(error);
+    }
   }
 
   @Query(() => Number)
