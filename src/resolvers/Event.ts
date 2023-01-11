@@ -264,7 +264,7 @@ export class EventResolver {
       /* Verify the signature */
       const body = data.orderId + "|" + data.payementId;
       const expectedSignature = crypto
-        .createHmac("sha256", 'bS0MWKA0RKv0VS3QGneUd6XU')
+        .createHmac("sha256", "bS0MWKA0RKv0VS3QGneUd6XU")
         .update(body.toString())
         .digest("hex");
       if (expectedSignature !== data.paymentSignature)
@@ -522,7 +522,7 @@ export class EventResolver {
       /* Verify the signature */
       const body = data.orderId + "|" + data.payementId;
       const expectedSignature = crypto
-        .createHmac("sha256", process.env.RAZORPAY_SECRET!)
+        .createHmac("sha256", "bS0MWKA0RKv0VS3QGneUd6XU")
         .update(body.toString())
         .digest("hex");
       if (expectedSignature !== data.paymentSignature)
@@ -728,7 +728,7 @@ export class EventResolver {
       /* Verify the signature */
       const body = data.orderId + "|" + data.payementId;
       const expectedSignature = crypto
-        .createHmac("sha256", process.env.RAZORPAY_SECRET!)
+        .createHmac("sha256", "bS0MWKA0RKv0VS3QGneUd6XU")
         .update(body.toString())
         .digest("hex");
       if (expectedSignature !== data.paymentSignature)
@@ -797,7 +797,6 @@ export class EventResolver {
     return event;
   }
 
-  @Authorized(["ADMIN"])
   @Query(() => String)
   async exportCSV(@Arg("EventID") id: string) {
     const event = await Event.findOneOrFail(id);
@@ -847,6 +846,19 @@ export class EventResolver {
     }
 
     return csv;
+  }
+
+  @Query(()=> String)
+  async getPAIDCSV() {
+    try {
+      const payrepo= getRepository(EventPay);
+      const users= await payrepo.createQueryBuilder("payment").leftJoinAndSelect("payment.event", "event").leftJoinAndSelect("payment.user", "user").select(["payment.id", "payment.amount", "payment.payementId" ,"payment.orderId", "payment.paymentSignature", "payment.isPaid", "event.id", "event.name", "user.shaastraID", "user.email", "user.id"]).execute();
+      let csv= parse(users);
+      return csv;
+    }
+    catch(error){
+      throw new Error(error);
+    }
   }
 
   @Query(() => Number)

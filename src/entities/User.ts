@@ -38,7 +38,7 @@ export class User extends BaseEntity {
     Thanks for signing up!<br><br><p>You verification code is <strong>${verificationOTP}</strong></p>`;
     await mail({
       email,
-      sub: "Complete your Verification | Shaastra- 2022",
+      sub: "Complete your Verification | Shaastra- 2023",
       body,
     });
   }
@@ -51,7 +51,7 @@ export class User extends BaseEntity {
     const body = `Hello <b>${name}</b>,<br><br>
   In case you forgot your password,<p>your OTP for reset password is
   <strong>${verificationOTP}</strong></p>`;
-    await mail({ email, sub: "Forgot your password  |  Shaastra- 2022", body });
+    await mail({ email, sub: "Forgot your password  |  Shaastra- 2023", body });
   }
   static async sendConfirmationMail({
     name,
@@ -72,7 +72,7 @@ export class User extends BaseEntity {
     }
     await mail({
       email,
-      sub: "Registration Successful |  Shaastra- 2022",
+      sub: "Registration Successful |  Shaastra- 2023",
       body,
     });
   }
