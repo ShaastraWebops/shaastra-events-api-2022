@@ -155,7 +155,7 @@ export class EventResolver {
     @Ctx() { user }: MyContext,
     @Arg("referral", { nullable: true }) referral?: string
   ) {
-    console.log(referral)
+    console.log(user, referral)
     const event = await Event.findOneOrFail(id, {
       relations: ["registeredUsers"],
     });
