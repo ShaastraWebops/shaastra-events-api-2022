@@ -46,7 +46,7 @@ const main = async () =>{
           let token = req.headers.cookie.split("token=")[1];
           console.log(token)
           if(token){
-            const decoded = jwt.verify(token, process.env.JWT_SECRET ||  "secret" ) as any;
+            const decoded = jwt.verify(token,"secret" ) as any;
             console.log("decoded",decoded)
             user = await User.findByIds(decoded.id);
             user = user[0];

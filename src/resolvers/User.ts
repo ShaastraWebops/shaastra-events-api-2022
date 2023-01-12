@@ -42,7 +42,7 @@ export class UserResolver {
             const { affected } = await User.update(user?.id, { role: UserRole.ADMIN })
             return affected === 1;
         }
-        let token = jwt.sign({ id: user.id }, process.env.JWT_SECRET || "secret");
+        let token = jwt.sign({ id: user.id }, "secret");
         res.cookie("token", token )
 
         console.log(token)
@@ -131,7 +131,7 @@ export class UserResolver {
         const checkPass = await bcrypt.compare(password, user?.password);
         if(!checkPass) throw new Error("Invalid Credential");
 
-        let token = jwt.sign({ id: user.id }, process.env.JWT_SECRET || "secret");
+        let token = jwt.sign({ id: user.id }, "secret");
         res.cookie("token", token ,{ httpOnly: false})
         console.log(token);
 
