@@ -20,7 +20,7 @@
     "googleapis": "^92.0.0",
     "graphql": "^15.5.1",
     "json2csv": "^5.0.6",
-    "jsonwebtoken": "^8.5.1",
+    "jsonwebtoken": "9.0.0",
     "mailersend": "^1.4.5",
     "nodemailer": "^6.7.2",
     "pg": "^8.7.1",
@@ -28,8 +28,7 @@
     "reflect-metadata": "^0.1.13",
     "sib-api-v3-typescript": "^2.2.2",
     "type-graphql": "^1.1.1",
-    "typeorm": "^0.2.41",
-    "mailersend": "^1.4.5"
+    "typeorm": "^0.2.41"
   },
   "devDependencies": {
     "@types/express": "^4.17.13",
