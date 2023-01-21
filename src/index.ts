@@ -42,8 +42,16 @@ const main = async () =>{
     schema,
     context :  async ( { req, res } : { req: express.Request, res: express.Response } ) => {
         let user;
+        let token;
         if(req.headers.cookie) {
-          let token = req.headers.cookie.split("; ")[0].split("token=")[1];
+          let cookies= req.headers.cookie.split("; ");
+          for (var i=0; i<cookies.length; i++) {
+            token= cookies[i].split("token=")[1];
+            if (token) {
+              break;
+            }
+          }
+          // token = req.headers.cookie.split("; ")[0].split("token=")[1];
           console.log(req.headers.cookie.split('; '));
           // console.log(req.headers.cookie)
 ;          console.log(token)
