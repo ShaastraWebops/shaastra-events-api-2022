@@ -131,7 +131,7 @@ export class UserResolver {
         const checkPass = await bcrypt.compare(password, user?.password);
         if(!checkPass) throw new Error("Invalid Credential");
 
-        let token = jwt.sign({ id: user.id }, "secret", { expiresIn: '1h' });
+        let token = jwt.sign({ id: user.id }, "secret");
         res.cookie("token", token ,{ httpOnly: false})
         console.log(token);
 
